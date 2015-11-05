@@ -1,0 +1,361 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<stetic-interface>
+  <configuration>
+    <images-root-path>..</images-root-path>
+    <target-gtk-version>2.12</target-gtk-version>
+  </configuration>
+  <import>
+    <widget-library name="glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <widget-library name="../bin/Release/test.exe" internal="true" />
+  </import>
+  <widget class="Gtk.Window" id="MainWindow" design-size="800 600">
+    <action-group name="Default">
+      <action id="MenuAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Menu</property>
+        <property name="ShortLabel" translatable="yes">Menu</property>
+      </action>
+      <action id="yeayAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">yeay</property>
+        <property name="ShortLabel" translatable="yes">yeay</property>
+      </action>
+      <action id="MenuAction1">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Menu</property>
+        <property name="ShortLabel" translatable="yes">Menu</property>
+      </action>
+      <action id="YeayAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Yeay</property>
+        <property name="ShortLabel" translatable="yes">Yeay</property>
+      </action>
+      <action id="ViewAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">View</property>
+        <property name="ShortLabel" translatable="yes">View</property>
+      </action>
+      <action id="HelpAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Help</property>
+        <property name="ShortLabel" translatable="yes">Help</property>
+      </action>
+      <action id="NotForYouAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Not For You</property>
+        <property name="ShortLabel" translatable="yes">Not For You</property>
+      </action>
+      <action id="FileAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">File</property>
+        <property name="ShortLabel" translatable="yes">Menu</property>
+      </action>
+      <action id="EditAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Edit</property>
+        <property name="ShortLabel" translatable="yes">Edit</property>
+      </action>
+      <action id="HelpAction1">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Help</property>
+        <property name="ShortLabel" translatable="yes">Help</property>
+      </action>
+      <action id="ViewAction1">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">View</property>
+        <property name="ShortLabel" translatable="yes">View</property>
+      </action>
+      <action id="EditAction1">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Edit</property>
+        <property name="ShortLabel" translatable="yes">Edit</property>
+      </action>
+      <action id="HelpAction2">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Help</property>
+        <property name="ShortLabel" translatable="yes">Help</property>
+      </action>
+      <action id="OpenFileAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Open File</property>
+        <property name="ShortLabel" translatable="yes">Save</property>
+      </action>
+      <action id="SaveAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Save</property>
+        <property name="ShortLabel" translatable="yes">Save as...</property>
+      </action>
+      <action id="SaveAsAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Save as...</property>
+        <property name="ShortLabel" translatable="yes">Exit</property>
+      </action>
+      <action id="ExitAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Exit</property>
+        <property name="ShortLabel" translatable="yes">Exit</property>
+      </action>
+      <action id="AboutAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">About</property>
+        <property name="ShortLabel" translatable="yes">About</property>
+      </action>
+      <action id="AboutAction1">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">About</property>
+        <property name="ShortLabel" translatable="yes">About</property>
+      </action>
+      <action id="RunAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Run</property>
+        <property name="ShortLabel" translatable="yes">Run</property>
+      </action>
+      <action id="RunProgramAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Run program</property>
+        <property name="ShortLabel" translatable="yes">Run program</property>
+      </action>
+      <action id="RunProgramAction1">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">Run Program</property>
+        <property name="ShortLabel" translatable="yes">Run Program</property>
+        <signal name="Activated" handler="runProgramClick" />
+      </action>
+    </action-group>
+    <property name="MemberName" />
+    <property name="WidthRequest">800</property>
+    <property name="HeightRequest">600</property>
+    <property name="Title" translatable="yes">MainWindow</property>
+    <property name="WindowPosition">CenterAlways</property>
+    <signal name="DeleteEvent" handler="OnDeleteEvent" />
+    <child>
+      <widget class="Gtk.VBox" id="mainBox">
+        <property name="MemberName" />
+        <property name="Spacing">6</property>
+        <child>
+          <widget class="Gtk.MenuBar" id="menubar">
+            <property name="MemberName" />
+            <node name="menubar" type="Menubar">
+              <node type="Menu" action="FileAction">
+                <node type="Menuitem" action="OpenFileAction" />
+                <node type="Menuitem" action="SaveAction" />
+                <node type="Menuitem" action="SaveAsAction" />
+                <node type="Menuitem" action="ExitAction" />
+              </node>
+              <node type="Menu" action="ViewAction1" />
+              <node type="Menu" action="EditAction1" />
+              <node type="Menu" action="RunAction">
+                <node type="Menuitem" action="RunProgramAction1" />
+              </node>
+              <node type="Menu" action="HelpAction2">
+                <node type="Menuitem" action="AboutAction1" />
+              </node>
+            </node>
+          </widget>
+          <packing>
+            <property name="Position">0</property>
+            <property name="AutoSize">False</property>
+            <property name="Expand">False</property>
+            <property name="Fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="Gtk.HBox" id="contents">
+            <property name="MemberName" />
+            <property name="Spacing">6</property>
+            <child>
+              <widget class="Gtk.VBox" id="sourceAndConsole">
+                <property name="MemberName" />
+                <property name="Spacing">6</property>
+                <child>
+                  <widget class="Gtk.Notebook" id="sourcePages">
+                    <property name="MemberName" />
+                    <property name="WidthRequest">500</property>
+                    <property name="HeightRequest">200</property>
+                    <property name="CanFocus">True</property>
+                    <property name="CurrentPage">0</property>
+                    <child>
+                      <widget class="Gtk.ScrolledWindow" id="GtkScrolledWindow">
+                        <property name="MemberName" />
+                        <property name="ShadowType">In</property>
+                        <child>
+                          <widget class="Gtk.TextView" id="sourceText">
+                            <property name="MemberName" />
+                            <property name="CanFocus">True</property>
+                            <property name="ShowScrollbars">True</property>
+                            <property name="Text" translatable="yes" />
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="Gtk.Label" id="label2">
+                        <property name="MemberName" />
+                        <property name="LabelProp" translatable="yes">source.lol</property>
+                      </widget>
+                      <packing>
+                        <property name="type">tab</property>
+                      </packing>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="Position">0</property>
+                    <property name="AutoSize">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="Gtk.VBox" id="console">
+                    <property name="MemberName" />
+                    <property name="WidthRequest">500</property>
+                    <property name="Spacing">6</property>
+                    <child>
+                      <widget class="Gtk.Label" id="consoleLabel">
+                        <property name="MemberName" />
+                        <property name="LabelProp" translatable="yes">Console</property>
+                      </widget>
+                      <packing>
+                        <property name="Position">0</property>
+                        <property name="AutoSize">True</property>
+                        <property name="Expand">False</property>
+                        <property name="Fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="Gtk.ScrolledWindow" id="GtkScrolledWindow3">
+                        <property name="MemberName" />
+                        <property name="HeightRequest">116</property>
+                        <property name="ShadowType">In</property>
+                        <child>
+                          <widget class="Gtk.TextView" id="outputField">
+                            <property name="MemberName" />
+                            <property name="CanFocus">True</property>
+                            <property name="ShowScrollbars">True</property>
+                            <property name="Editable">False</property>
+                            <property name="Text" translatable="yes" />
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="Position">1</property>
+                        <property name="AutoSize">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="Gtk.ScrolledWindow" id="GtkScrolledWindow4">
+                        <property name="MemberName" />
+                        <property name="HeightRequest">30</property>
+                        <property name="ShadowType">In</property>
+                        <child>
+                          <widget class="Gtk.TextView" id="inputField">
+                            <property name="MemberName" />
+                            <property name="CanFocus">True</property>
+                            <property name="ShowScrollbars">True</property>
+                            <property name="Text" translatable="yes">&gt;</property>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="Position">2</property>
+                        <property name="AutoSize">False</property>
+                        <property name="Expand">False</property>
+                      </packing>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="Position">1</property>
+                    <property name="AutoSize">True</property>
+                  </packing>
+                </child>
+              </widget>
+              <packing>
+                <property name="Position">0</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.VBox" id="tokensAndSymbolTable">
+                <property name="MemberName" />
+                <property name="Spacing">6</property>
+                <child>
+                  <widget class="Gtk.Label" id="tokensLabel">
+                    <property name="MemberName" />
+                    <property name="LabelProp" translatable="yes">Tokens</property>
+                  </widget>
+                  <packing>
+                    <property name="Position">0</property>
+                    <property name="AutoSize">True</property>
+                    <property name="Expand">False</property>
+                    <property name="Fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="Gtk.ScrolledWindow" id="GtkScrolledWindow2">
+                    <property name="MemberName" />
+                    <property name="WidthRequest">300</property>
+                    <property name="ShadowType">In</property>
+                    <child>
+                      <widget class="Gtk.TreeView" id="symbolTableTreeView">
+                        <property name="MemberName" />
+                        <property name="CanFocus">True</property>
+                        <property name="ShowScrollbars">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="PackType">End</property>
+                    <property name="Position">1</property>
+                    <property name="AutoSize">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="Gtk.Label" id="symbolTableLabel">
+                    <property name="MemberName" />
+                    <property name="LabelProp" translatable="yes">Symbol Table</property>
+                  </widget>
+                  <packing>
+                    <property name="PackType">End</property>
+                    <property name="Position">2</property>
+                    <property name="AutoSize">True</property>
+                    <property name="Expand">False</property>
+                    <property name="Fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="Gtk.ScrolledWindow" id="GtkScrolledWindow1">
+                    <property name="MemberName" />
+                    <property name="WidthRequest">300</property>
+                    <property name="ShadowType">In</property>
+                    <child>
+                      <widget class="Gtk.TreeView" id="tokensTreeView">
+                        <property name="MemberName" />
+                        <property name="CanFocus">True</property>
+                        <property name="ShowScrollbars">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="PackType">End</property>
+                    <property name="Position">3</property>
+                    <property name="AutoSize">False</property>
+                  </packing>
+                </child>
+              </widget>
+              <packing>
+                <property name="Position">1</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="Position">1</property>
+            <property name="AutoSize">True</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+</stetic-interface>

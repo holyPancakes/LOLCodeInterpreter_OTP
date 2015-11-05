@@ -1,0 +1,15 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
+    <Files>
+      <File FileName="test/LexemeCreator.cs" Line="156" Column="14" />
+      <File FileName="test/MainWindow.cs" Line="83" Column="22" />
+      <File FileName="test/Parser.cs" Line="12" Column="4" />
+      <File FileName="test/Program.cs" Line="13" Column="4" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
