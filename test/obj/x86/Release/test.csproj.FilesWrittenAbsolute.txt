@@ -1,0 +1,2 @@
+/home/kintetsu/Desktop/LOLCodeInterpreter_OTP/test/obj/x86/Release/.NETFramework,Version=v4.0.AssemblyAttribute.cs
+/home/kintetsu/Desktop/LOLCodeInterpreter_OTP/test/obj/x86/Release/test.gtk-gui.gui.stetic

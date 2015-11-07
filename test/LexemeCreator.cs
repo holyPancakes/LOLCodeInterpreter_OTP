@@ -68,76 +68,68 @@ namespace test
 
 		private void checker(List<Lexeme> lex, char c)
 		{ //checks the token if it is a keyword or a value
-			String varIdent = "[A-Za-z][A-Za-z0-9_]*"; //regex for variable
-			String numbr = "\\d+"; //regex for numbr
-			String numbar = "(\\d+|\\d*\\.\\d+)"; //regex for numbar
-			String troof = "(WIN|FAIL)"; //regex for troof
 			Lexeme temp = new Lexeme();
-			Regex rxVarIdent = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			Regex rxvNumbr = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			Regex rxNumbar = new Regex (numbar, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-			Regex rxTroof = new Regex (troof, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 
-			if(rxvNumbr.IsMatch(token))
+			if(Constants.NUMBRVAL.IsMatch(token))
 			{ //checks if it is a NUMBER constant
 				temp = new Lexeme(token, "NUMBR constant");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(rxNumbar.IsMatch(token))
+			else if(Constants.NUMBARVAL.IsMatch(token))
 			{ //checks if it is a NUMBAR constant
 				temp = new Lexeme(token, "NUMBAR constant");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(rxTroof.IsMatch(token))
+			else if(Constants.TROOFVAL.IsMatch(token))
 			{ //checks if it is a TROOF constant
 				temp = new Lexeme(token, "TROOF constant");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(token.Equals("HAI"))
+			else if(token.Equals(Constants.STARTPROG))
 			{ //checks if it is a HAI keyword
-				temp = new Lexeme("HAI", "Starts a program");
+				temp = new Lexeme(Constants.STARTPROG, "Starts a program");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(token.Equals("KTHXBYE"))
+			else if(token.Equals(Constants.ENDPROG))
 			{ //checks if it is a KTHXBYE keyword
-				temp = new Lexeme("KTHXBYE", "Ends a program");
+				temp = new Lexeme(Constants.ENDPROG, "Ends a program");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(token.Equals("VISIBLE"))
+			else if(token.Equals(Constants.PRINT))
 			{ //checks if the keyword is VISIBLE
 				temp = new Lexeme("VISIBLE", "Prints a value"); //forms a lexeme
 				lex.Add(temp); //adds it to an array of lexemes
 				token = ""; //resets the keyword
 			}
-			else if(token.Equals("ITZ"))
+			else if(token.Equals(Constants.STARTINIT))
 			{ //checks if it is a ITZ keyword
-				temp = new Lexeme("ITZ", "Assigns value after declaration.");
+				temp = new Lexeme(Constants.STARTINIT, "Assigns value after declaration.");
 				lex.Add(temp);
 				token = "";
 			}
 			else if(token.StartsWith("I"))
 			{ //checks if it is possibly a I HAS A keyword
-				if(!token.Equals("I HAS A")){
+				if(!token.Equals(Constants.VARDEC)){
 					token += c;
 					return;
 				}
-				temp = new Lexeme("I HAS A", "Declares a variable.");
+				temp = new Lexeme(Constants.VARDEC, "Declares a variable.");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(token.Equals("R"))
+			else if(token.Equals(Constants.ASSIGN))
 			{ //checks if it is a R keyword
-				temp = new Lexeme("R", "Assignment operation");
+				temp = new Lexeme(Constants.ASSIGN, "Assignment operation");
 				lex.Add(temp);
 				token = "";
 			}
-			else if(rxVarIdent.IsMatch(token))
+			else if(Constants.VARIDENT.IsMatch(token))
 			{ //checks if it is a variable
 				temp = new Lexeme(token, "Variable Identifier");
 				lex.Add(temp);

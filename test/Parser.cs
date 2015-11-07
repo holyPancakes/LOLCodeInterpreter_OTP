@@ -90,7 +90,7 @@ namespace test
 								if(!old.getType().Equal(type[0])) //check if they are differen
 									if(!file) Console.log.println("Changed " + var.getName() + " type from " + old.getType() + " to " +type[0]);
 
-								table.put(var.getName(), new Value(value.getName(), type[0])); //puts new value to table
+								table[var.getName()] = new Value(value.getName(), type[0]); //puts new value to table
 								if(!file) Console.log.println("Changed " + var.getName() + " to " + value.getName() + ".");
 							}else if(value.getDescription().Equal("Variable Identifier")){ //checks if the right side is a variable
 								if(!table.containsKey(value.getName())) //check if the variable is already declared
@@ -103,7 +103,7 @@ namespace test
 									if(!file) 
 										Console.log.println("Changed " + var.getName() + " type from " + old.getType() + " to " +type);
 
-								table.put(var.getName(), table.get(value.getName())); //changes the value of the variable
+								table.[var.getName()] = table.[value.getName()]; //changes the value of the variable
 								if(!file) Console.log.println("Initialized " + var.getName() + " to " + table.get(value.getName()).getValue() + ".");
 							}else //else the right side is neither a variable or a constant
 								throw new Exception("Only variable or constants should be on left hand side of R");

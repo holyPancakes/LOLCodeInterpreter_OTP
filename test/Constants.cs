@@ -1,0 +1,54 @@
+﻿using System;
+using System.Text.RegularExpressions;
+
+namespace test
+{
+	public class Constants
+	{
+		private static String varIdent = "[A-Za-z][A-Za-z0-9_]*"; //regex for variable
+		private static String numbr = "\\d+"; //regex for numbr
+		private static String numbar = "(\\d+|\\d*\\.\\d+)"; //regex for numbar
+		private static String troof = "(WIN|FAIL)"; //regex for troof
+
+		public static string PRINT = "VISIBLE";
+		public static string VARDEC = "I HAS A";
+		public static string ASSIGN = "R";
+		public static string ENDPROG = "KTHXBYE";
+		public static string STARTPROG = "HAI";
+		public static string STARTINIT = "ITZ";
+		public static string SCAN = "GIMMEH";
+		public static string CONDITION = "O RLY?";
+		public static string IF = "YA RLY";
+		public static string ELSE = "NO WAI";
+		public static string CASE = "OMG";
+		public static string DEFAULT = "OMGWTF";
+		public static string BREAK = "GTFO";
+
+		public static string AN = "AN";
+		public static string ADD = "SUM OF";
+		public static string SUB = "DIFF OF";
+		public static string MUL = "PRODUKT OF";
+		public static string DIV = "QUOSHUNT OF";
+		public static string MOD = "MOD OF";
+		public static string MAX = "BIGGR OF";
+		public static string MIN = "SMALLR OF";
+
+		public static string AND = "BOTH OF";
+		public static string OR = "EITHER OF";
+		public static string XOR = "WON OF";
+		public static string NOT = "NOT";
+		public static string MANY_AND = "ALL OF";
+		public static string MANY_OR = "ANY OF";
+
+		public static string MKAY = "MKAY";
+
+		public static string EQUAL = "BOTH SAEM";
+		public static string NOTEQUAL = "DIFFRINT OF";
+
+		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex NUMBRVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex NUMBARVAL = new Regex (numbar, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex TROOFVAL = new Regex (troof, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+	}
+}
+
