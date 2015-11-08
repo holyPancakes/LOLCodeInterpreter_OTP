@@ -8,7 +8,9 @@ namespace test
 		private String name; //lexeme name/keyword
 		private String description; //description which describes the lexeme
 
-		public Lexeme(){}
+		public Lexeme(){
+			this.name = "!";
+		}
 
 		public Lexeme(String n, String desc)
 		{ //constructor

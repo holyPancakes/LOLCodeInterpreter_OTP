@@ -13,6 +13,7 @@ public partial class MainWindow: Gtk.Window
 
 	private Dictionary<String, Value> table = new Dictionary<String, Value>(); //symbol table
 	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
+	private Boolean hasStarted; //checks if the program already started using HAI
 
 	Gtk.ListStore tokensListStore;
 	Gtk.ListStore symbolTableListStore;
@@ -73,6 +74,8 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	public void Interpret(){
+		outputField.Buffer.Text = "";
+		hasStarted = false;
 		hasEnded = false;
 		tokensListStore.Clear ();
 		symbolTableListStore.Clear ();
@@ -80,37 +83,18 @@ public partial class MainWindow: Gtk.Window
 		table.Clear ();
 		string sourceString = sourceText.Buffer.Text;
 		string[] sourceLines = sourceString.Split (delimeter);
-		int lineNumber = 1;
-		try{
-			lexemeList = lexer.process (sourceLines[0]); //creates an array of lexemes
-			parseHAI (); //parses the lexemes
-			lexer.reset ();
-			lineNumber ++;
-		} catch (SyntaxException e) { //if something went wrong, prints the error on screen
-			outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + "`: " + e.Message+ "\n";
-			//return;
-		}
-		allLex.AddRange(lexemeList);
-		for(int i=1 ; i< sourceLines.Length; i++) { //infinite loop
+		for(int i=0 ; i< sourceLines.Length; i++) { //infinite loop
 			line = sourceLines [i];
 
 			try {
 				lexemeList = lexer.process (line); //creates an array of lexemes
 				parse (); //parses the lexemes
 			} catch (SyntaxException e) { //if something went wrong, prints the error on screen
-				outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + "`: " + e.Message+ "\n";
+				outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
 				break;
 			}
 			allLex.AddRange(lexemeList);
 			lexer.reset (); //resets the lexer
-		}
-	}
-
-	public void parseHAI()
-	{ //checks if the program starts with HAI
-		Lexeme top = lexemeList[0];
-		if (!top.getName ().Equals (Constants.STARTPROG)) {
-			throw new SyntaxException(" All programs should start with HAI!");
 		}
 	}
 
@@ -119,7 +103,12 @@ public partial class MainWindow: Gtk.Window
 		//Console.WriteLine("PARSING:");
 		char[] delimeter = {' '};
 		for(int i=0; i < lexemeList.Count; i++){
-			if(hasEnded)
+			if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
+				hasStarted = true;
+			} else if (!hasStarted) {
+				throw new SyntaxException ("Program has not started yet!");
+			}
+			else if(hasEnded)
 			{
 				throw new SyntaxException("Program already ended!");
 			}
@@ -192,7 +181,11 @@ public partial class MainWindow: Gtk.Window
 						throw new SyntaxException("Variable should be on left hand side of R. " + var.getName() + " is not a variable.");
 
 					i++;
-				}else if(lexemeList[i].getName().Equals(Constants.ENDPROG)){ //checks if the keyword is KTHXBYE
+				}else if(lexemeList[i].getDescription().Equals("Variable Identifier")){ //checks if the keyword is KTHXBYE
+					if(!table.ContainsKey(lexemeList[i].getName())) //check if the variable is already declared
+						throw new SyntaxException("Variable " + lexemeList[i].getName() + " is not yet declared!");
+				}
+				else if(lexemeList[i].getName().Equals(Constants.ENDPROG)){ //checks if the keyword is KTHXBYE
 					hasEnded = true;
 				}
 			}
