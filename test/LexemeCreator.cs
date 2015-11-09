@@ -8,12 +8,14 @@ namespace test
 	public class LexemeCreator
 	{
 		private Boolean quotedDouble;
+		private Boolean isComment;
 		private String str;
 		private String token;
 
 		public LexemeCreator ()
 		{
 			quotedDouble = false;
+			isComment = false;
 		}
 
 		public List<Lexeme> process(String line)
@@ -29,11 +31,26 @@ namespace test
 				}
 				else if(c == ' ' && !quotedDouble)
 				{ //checks if the character is space and not quoted
-					if(token.EndsWith(" ") || token.Length == 0) continue; //ignore if it is a space
-					checker(lex, c); //else checks the token if it is a keyword or a value
+					if (token.EndsWith (" ") || token.Length == 0)
+						continue; //ignore if it is a space
+					else if (token.Equals (Constants.ONELINE)) {
+						token = "";
+						return lex;
+					} else if (token.Equals (Constants.MULTILINE)) {
+						isComment = true;
+						token = "";
+					} else if (token.Equals (Constants.ENDCOMMENT)) {
+						if (isComment) {
+							isComment = false;
+							token = "";
+						} else
+							throw new SyntaxException ("Unexpected " + Constants.ENDCOMMENT + " without starting a comment!");
+					}else if (isComment) token = "";
+					else checker(lex, c); //else checks the token if it is a keyword or a value
 				}
 				else if(c == '\"')
 				{ //checks if the char is a double quotes
+					if(isComment) continue;
 					quotedDouble = !quotedDouble; //switches the flags of double quotes
 					if(!quotedDouble)
 					{ //if the double quote becomes false
@@ -43,7 +60,7 @@ namespace test
 					}
 				}
 				else if(quotedDouble)
-				{ 
+				{
 					str += c; //append the char to string
 				}
 				else
@@ -56,7 +73,20 @@ namespace test
 			{//checks if the string is properly closed
 				throw new SyntaxException("String not properly closed.");
 			}
-			checker(lex, '\n'); //checks the token of it is not yet empty
+			if (token.Equals (Constants.ONELINE)) {
+				token = "";
+				return lex;
+			} else if (token.Equals (Constants.MULTILINE)) {
+				isComment = true;
+				token = "";
+			} else if (token.Equals (Constants.ENDCOMMENT)) {
+				if (isComment) {
+					isComment = false;
+					token = "";
+				} else
+					throw new SyntaxException ("Unexpected " + Constants.ENDCOMMENT + " without starting a comment!");
+			}else if (isComment) token = "";
+			else checker(lex, '\n'); //checks the token of it is not yet empty
 
 			if(token.Length!=0)
 			{ //checks if the token is not a keyword and found dangling in the code

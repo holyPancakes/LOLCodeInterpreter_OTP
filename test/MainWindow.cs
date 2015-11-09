@@ -96,14 +96,18 @@ public partial class MainWindow: Gtk.Window
 			allLex.AddRange(lexemeList);
 			lexer.reset (); //resets the lexer
 		}
+		if(!hasEnded) outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length+1) + ": Program is not closed properly!\n";
 	}
 
 	public void parse()
 	{ //processses the lexemes
 		//Console.WriteLine("PARSING:");
 		char[] delimeter = {' '};
+		if (lexemeList.Count == 0)
+			return;
 		for(int i=0; i < lexemeList.Count; i++){
 			if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
+				if(hasStarted) throw new SyntaxException ("Unexpected " + Constants.STARTPROG + "!");
 				hasStarted = true;
 			} else if (!hasStarted) {
 				throw new SyntaxException ("Program has not started yet!");

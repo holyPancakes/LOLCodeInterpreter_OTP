@@ -1,12 +1,12 @@
 ﻿<Properties StartupItem="test/test.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/LexemeCreator.cs">
     <Files>
-      <File FileName="test/LexemeCreator.cs" Line="351" Column="4" />
-      <File FileName="test/Constants.cs" Line="51" Column="46" />
-      <File FileName="test/MainWindow.cs" Line="78" Column="22" />
-      <File FileName="test/Program.cs" Line="13" Column="4" />
-      <File FileName="test/Lexeme.cs" Line="12" Column="20" />
+      <File FileName="test/LexemeCreator.cs" Line="50" Column="6" />
+      <File FileName="test/Constants.cs" Line="13" Column="49" />
+      <File FileName="test/MainWindow.cs" Line="89" Column="9" />
+      <File FileName="test/Program.cs" Line="1" Column="1" />
+      <File FileName="test/Lexeme.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -46,7 +46,7 @@ namespace test
 		public static string EQUAL = "BOTH SAEM";//
 		public static string NOTEQUAL = "DIFFRINT OF"; //
 
-		public static string ONELINE = "BTW";//
+		public static string ONELINE = "BTW";//X
 		public static string MULTILINE = "OBTW"; //
 		public static string ENDCOMMENT = "TLDR";//
 
