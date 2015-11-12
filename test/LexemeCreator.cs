@@ -132,7 +132,9 @@ namespace test
 			else if (token.Equals (Constants.NOT))
 				temp = new Lexeme (Constants.NOT, "Negates the condition");
 			else if (token.Equals (Constants.MKAY))
-				temp = new Lexeme (Constants.MKAY, "Closes the arity");
+				temp = new Lexeme (Constants.MKAY, "Closes the arity or concat");
+			else if (token.Equals (Constants.CONCAT))
+				temp = new Lexeme (Constants.CONCAT, "Concatenates a string");
 			else if(token.Equals(Constants.STARTINIT))
 				temp = new Lexeme(Constants.STARTINIT, "Assigns value after declaration.");
 			else if (token.StartsWith ("A")) {
@@ -143,6 +145,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -165,6 +169,8 @@ namespace test
 				else if((!token.EndsWith("OF") || !token.EndsWith("SAEM")) && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -184,6 +190,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -201,6 +209,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -218,6 +228,8 @@ namespace test
 				else if(!token.EndsWith("HAS") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -235,6 +247,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -252,6 +266,8 @@ namespace test
 				else if(!token.EndsWith("WAI") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -269,6 +285,8 @@ namespace test
 				else if(!token.EndsWith("RLY?") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -286,6 +304,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -303,6 +323,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -322,6 +344,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -339,6 +363,8 @@ namespace test
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";
@@ -356,6 +382,8 @@ namespace test
 				else if(!token.EndsWith("RLY") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");
+					lex.Add(temp);
+					temp = new Lexeme ();
 					token = str [1];
 					checker (lex, c);
 					token = "";

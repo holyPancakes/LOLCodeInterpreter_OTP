@@ -14,6 +14,7 @@ public partial class MainWindow: Gtk.Window
 	private Dictionary<String, Value> table = new Dictionary<String, Value>(); //symbol table
 	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
 	private Boolean hasStarted; //checks if the program already started using HAI
+	private Boolean hasError; //checks if the program have error.
 
 	Gtk.ListStore tokensListStore;
 	Gtk.ListStore symbolTableListStore;
@@ -77,6 +78,7 @@ public partial class MainWindow: Gtk.Window
 		outputField.Buffer.Text = "";
 		hasStarted = false;
 		hasEnded = false;
+		hasError = false;
 		tokensListStore.Clear ();
 		symbolTableListStore.Clear ();
 		allLex.Clear ();
@@ -88,23 +90,31 @@ public partial class MainWindow: Gtk.Window
 
 			try {
 				lexemeList = lexer.process (line); //creates an array of lexemes
+				foreach(Lexeme l in lexemeList){
+					Console.WriteLine(l.toString());
+				}
 				parse (); //parses the lexemes
 			} catch (SyntaxException e) { //if something went wrong, prints the error on screen
+				hasError = true;
 				outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
+				break;
+			}catch(Exception e){
+				outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + "\n" + e.Message+ "\n";
 				break;
 			}
 			allLex.AddRange(lexemeList);
 			lexer.reset (); //resets the lexer
 		}
-		if(!hasEnded) outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length+1) + ": Program is not closed properly!\n";
+		if (!hasEnded && !hasError) {
+			outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length + 1) + ": Program is not closed properly!\n";
+			hasError = false;
+		}
 	}
 
 	public void parse()
 	{ //processses the lexemes
 		//Console.WriteLine("PARSING:");
 		char[] delimeter = {' '};
-		if (lexemeList.Count == 0)
-			return;
 		for(int i=0; i < lexemeList.Count; i++){
 			if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
 				if(hasStarted) throw new SyntaxException ("Unexpected " + Constants.STARTPROG + "!");
