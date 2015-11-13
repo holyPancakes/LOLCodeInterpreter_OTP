@@ -75,7 +75,7 @@ public partial class MainWindow
 	
 	private global::Gtk.ScrolledWindow GtkScrolledWindow4;
 	
-	private global::Gtk.TextView inputField;
+	private global::Gtk.TextView lineField;
 	
 	private global::Gtk.VBox tokensAndSymbolTable;
 	
@@ -238,9 +238,9 @@ public partial class MainWindow
 		this.GtkScrolledWindow3.ShadowType = ((global::Gtk.ShadowType)(1));
 		// Container child GtkScrolledWindow3.Gtk.Container+ContainerChild
 		this.outputField = new global::Gtk.TextView ();
-		this.outputField.CanFocus = true;
 		this.outputField.Name = "outputField";
 		this.outputField.Editable = false;
+		this.outputField.CursorVisible = false;
 		this.GtkScrolledWindow3.Add (this.outputField);
 		this.console.Add (this.GtkScrolledWindow3);
 		global::Gtk.Box.BoxChild w8 = ((global::Gtk.Box.BoxChild)(this.console [this.GtkScrolledWindow3]));
@@ -251,11 +251,11 @@ public partial class MainWindow
 		this.GtkScrolledWindow4.Name = "GtkScrolledWindow4";
 		this.GtkScrolledWindow4.ShadowType = ((global::Gtk.ShadowType)(1));
 		// Container child GtkScrolledWindow4.Gtk.Container+ContainerChild
-		this.inputField = new global::Gtk.TextView ();
-		this.inputField.Buffer.Text = ">";
-		this.inputField.CanFocus = true;
-		this.inputField.Name = "inputField";
-		this.GtkScrolledWindow4.Add (this.inputField);
+		this.lineField = new global::Gtk.TextView ();
+		this.lineField.CanFocus = true;
+		this.lineField.Name = "lineField";
+		this.lineField.Editable = false;
+		this.GtkScrolledWindow4.Add (this.lineField);
 		this.console.Add (this.GtkScrolledWindow4);
 		global::Gtk.Box.BoxChild w10 = ((global::Gtk.Box.BoxChild)(this.console [this.GtkScrolledWindow4]));
 		w10.Position = 2;
@@ -331,10 +331,11 @@ public partial class MainWindow
 		if ((this.Child != null)) {
 			this.Child.ShowAll ();
 		}
-		this.DefaultWidth = 800;
-		this.DefaultHeight = 600;
+		this.DefaultWidth = 819;
+		this.DefaultHeight = 633;
 		this.Show ();
 		this.DeleteEvent += new global::Gtk.DeleteEventHandler (this.OnDeleteEvent);
+		this.ExitAction.Activated += new global::System.EventHandler (this.CloseOnClick);
 		this.RunProgramAction1.Activated += new global::System.EventHandler (this.runProgramClick);
 	}
 }

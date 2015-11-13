@@ -2,6 +2,9 @@ using System;
 using Gtk;
 using test;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+
 
 public partial class MainWindow: Gtk.Window
 {	
@@ -14,13 +17,13 @@ public partial class MainWindow: Gtk.Window
 	private Dictionary<String, Value> table = new Dictionary<String, Value>(); //symbol table
 	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
 	private Boolean hasStarted; //checks if the program already started using HAI
-	private Boolean hasError; //checks if the program have error.
+	private Boolean hasError;
+	private Gtk.ListStore tokensListStore;
+	private Gtk.ListStore symbolTableListStore;
 
-	Gtk.ListStore tokensListStore;
-	Gtk.ListStore symbolTableListStore;
+	TextView inputTextView;
 
-	public MainWindow (): base (Gtk.WindowType.Toplevel)
-	{
+	public MainWindow (): base (Gtk.WindowType.Toplevel){
 		Build ();
 
 		Gtk.TreeViewColumn lexemeColumn = new Gtk.TreeViewColumn ();
@@ -71,7 +74,7 @@ public partial class MainWindow: Gtk.Window
 
 		symbolTableTreeView.Model = symbolTableListStore;
 
-
+		sourceText.Buffer.Text = Constants.STARTPROG + "\n\n" + Constants.ENDPROG;
 	}
 
 	public void Interpret(){
@@ -87,61 +90,83 @@ public partial class MainWindow: Gtk.Window
 		string[] sourceLines = sourceString.Split (delimeter);
 		for(int i=0 ; i< sourceLines.Length; i++) { //infinite loop
 			line = sourceLines [i];
-
+			lineField.Buffer.Text = i + ": " + line;
 			try {
 				lexemeList = lexer.process (line); //creates an array of lexemes
-				foreach(Lexeme l in lexemeList){
-					Console.WriteLine(l.toString());
-				}
 				parse (); //parses the lexemes
 			} catch (SyntaxException e) { //if something went wrong, prints the error on screen
 				hasError = true;
 				outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
 				break;
-			}catch(Exception e){
-				outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + "\n" + e.Message+ "\n";
-				break;
 			}
 			allLex.AddRange(lexemeList);
 			lexer.reset (); //resets the lexer
 		}
-		if (!hasEnded && !hasError) {
-			outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length + 1) + ": Program is not closed properly!\n";
-			hasError = false;
-		}
+		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length+1) + ": Program is not closed properly!\n";
+		if(hasEnded) lineField.Buffer.Text = "Done!";
 	}
 
 	public void parse()
 	{ //processses the lexemes
 		//Console.WriteLine("PARSING:");
 		char[] delimeter = {' '};
+		if (lexemeList.Count == 0)
+			return;
 		for(int i=0; i < lexemeList.Count; i++){
 			if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
 				if(hasStarted) throw new SyntaxException ("Unexpected " + Constants.STARTPROG + "!");
 				hasStarted = true;
-			} else if (!hasStarted) {
+			} else if (!hasStarted)
 				throw new SyntaxException ("Program has not started yet!");
-			}
 			else if(hasEnded)
-			{
 				throw new SyntaxException("Program already ended!");
-			}
-			else
-			{
+			else{
 				if(lexemeList[i].getName().Equals(Constants.PRINT)){ //checks if the keyword is VISIBLE
 					if(lexemeList.Count - i >= 2){ //checks if VISIBLE has arguments
 						Lexeme l = lexemeList[i+1]; //gets the next lexeme
-						if(l.getDescription().EndsWith("YARN constant")){ //checks if it is a string constant
-							outputField.Buffer.Text += l.getName()+ "\n"; //prints the string
+						if(l.getDescription().EndsWith("YARN Delimiter")){ //checks if it is a string constant
+							Lexeme yarn = lexemeList[i+2];
+							outputField.Buffer.Text += yarn.getName()+ "\n"; //prints the string
+							i+=3;
 						}else if(l.getDescription().Equals("Variable Identifier")){
 							if(!table.ContainsKey(l.getName())) //checks if the variable is already declared
 								throw new SyntaxException("Variable identifier '" + l.getName() + "' is not yet declared.");
 							Value val = table[l.getName()]; //gets the value of the variable
 							outputField.Buffer.Text += val.getValue()+ "\n"; //prints the value of the variable
+							i++; 
 						}else throw new SyntaxException(l.getName() + " is not printable!"); //error that a value is not printable
-						i++; //increments the index
 					}else //else VISIBLE has no arguments
 						throw new SyntaxException("VISIBLE has no arguments!");
+				}else if(lexemeList[i].getName().Equals(Constants.SCAN)){
+					if (lexemeList.Count - i >= 2) {
+						if (table.ContainsKey (lexemeList [i + 1].getName ())) {
+							Dialog inputPrompt = null;
+							ResponseType response = ResponseType.None;
+
+							try {
+								inputPrompt = new Dialog ("GIMMEH", this, 
+									DialogFlags.DestroyWithParent | DialogFlags.Modal, 
+									"OK", ResponseType.Yes);
+								
+								inputPrompt.Resize (300, 50);
+								inputPrompt.VBox.Add (inputTextView = new TextView ());
+								inputPrompt.ShowAll ();
+
+								response = (ResponseType)inputPrompt.Run ();
+							} finally {
+								if (inputPrompt != null) {
+									if (response == ResponseType.Yes) {
+										string input = inputTextView.Buffer.Text;
+										Value val = new Value (input, "YARN");
+										table [lexemeList [i + 1].getName ()] = val; 
+									}
+									inputPrompt.Destroy ();
+								}
+							}
+						} else
+							throw new SyntaxException ("Variable " + lexemeList [i + 1].getName () + " is not yet delcared!");
+					} else
+						throw new SyntaxException ("GIMMEH has no arguments!");
 				}else if(lexemeList[i].getName().Equals(Constants.VARDEC)){ //checks if the keyword is I HAS A
 					if(lexemeList.Count - i == 2){ //checks if I HAS A has arguments
 						Lexeme l = lexemeList[i+1]; //gets the next lexeme
@@ -151,8 +176,7 @@ public partial class MainWindow: Gtk.Window
 							table.Add(l.getName(), new Value("NOOB", "Untyped")); //makes the variable NOOB
 						}
 						i++; //increments the index
-					}
-					else if(lexemeList.Count > 2){ //checks if the statement also starts with a value
+					} else if(lexemeList.Count > 2){ //checks if the statement also starts with a value
 						Lexeme l1 = lexemeList[i+1]; //gets the next lexeme
 						if(l1.getDescription().Equals("Variable Identifier")){ //checks if it is a variable identifier
 							if(table.ContainsKey(l1.getName())) //checks if the variable is in the table
@@ -165,15 +189,15 @@ public partial class MainWindow: Gtk.Window
 									table.Add(l1.getName(), new Value(l3.getName(), type[0])); //puts it to table
 								}else if(table.ContainsKey(l3.getName())){ //checks if the argument is a variable and it is initialized
 									table.Add(l1.getName(), table[l3.getName()]); //copies the value and puts it to the table
+								}else if(l3.getDescription().Contains("Operator")){
+									table.Add(l1.getName(), new Value("NOOB", "Untyped")); //makes the variable NOOB
 								}else //else ITZ has no arguments
 									throw new SyntaxException("Expected constant or variable after ITZ.");
 							}
 						}
 						i+=3;
-					}
-					else{ //else throws exception
+					} else
 						throw new SyntaxException("I HAS A has no arguments!");
-					}
 				}else if(lexemeList[i].getName().Equals(Constants.ASSIGN)){ //checks if the keyword is R
 					Lexeme var = lexemeList[i-1]; //gets the left and right lexemes of R
 					Lexeme value = lexemeList[i+1];
@@ -188,6 +212,8 @@ public partial class MainWindow: Gtk.Window
 								throw new SyntaxException("Variable " + value.getName() + " is not yet declared!");
 		
 							table.Add(var.getName(), table[value.getName()]); //changes the value of the variable
+						}else if(value.getDescription().Contains("Operator")){
+							return;
 						}else //else the right side is neither a variable or a constant
 							throw new SyntaxException("Only variable or constants should be on left hand side of R");
 
@@ -207,6 +233,8 @@ public partial class MainWindow: Gtk.Window
 		//Console.WriteLine("========");
 	}
 
+	
+
 	public void UpdateTables(){
 		foreach (Lexeme l in allLex) {
 			tokensListStore.AppendValues (l.getName(), l.getDescription());
@@ -219,16 +247,22 @@ public partial class MainWindow: Gtk.Window
 		}
 	}
 
-	protected void OnDeleteEvent (object sender, DeleteEventArgs a)
-	{
-		Application.Quit ();
+	protected void OnDeleteEvent (object sender, DeleteEventArgs a){
+		Gtk.Application.Quit();
 		a.RetVal = true;
 	}
 	
-	protected void runProgramClick (object sender, EventArgs e)
-	{
+	protected void runProgramClick (object sender, EventArgs e){
 		Interpret ();
 		UpdateTables ();
 	}
 
+	private void openFile (object sender, EventArgs e){
+		throw new NotImplementedException ();
+	}
+
+	protected void CloseOnClick (object sender, EventArgs e)
+	{
+		Environment.Exit (0);
+	}
 }

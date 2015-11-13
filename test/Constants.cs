@@ -20,19 +20,20 @@ namespace test
 		public static string CONDITION = "O RLY?"; //
 		public static string IF = "YA RLY"; //
 		public static string ELSE = "NO WAI"; //
+		public static string END_IF = "OIC";
 		public static string SWITCH = "WTF?"; //
 		public static string CASE = "OMG"; //
 		public static string DEFAULT = "OMGWTF"; //
 		public static string BREAK = "GTFO"; //
 
-		public static string AN = "AN";//
-		public static string ADD = "SUM OF";//
-		public static string SUB = "DIFF OF"; //
-		public static string MUL = "PRODUKT OF"; //
-		public static string DIV = "QUOSHUNT OF";//
-		public static string MOD = "MOD OF";//
-		public static string MAX = "BIGGR OF";//
-		public static string MIN = "SMALLR OF";//
+		public static string AN = "AN";//done
+		public static string ADD = "SUM OF";//done
+		public static string SUB = "DIFF OF"; //under
+		public static string MUL = "PRODUKT OF"; //under
+		public static string DIV = "QUOSHUNT OF";//under
+		public static string MOD = "MOD OF";//under
+		public static string MAX = "BIGGR OF";//under
+		public static string MIN = "SMALLR OF";//under
 
 		public static string AND = "BOTH OF";//
 		public static string OR = "EITHER OF";//
@@ -47,7 +48,7 @@ namespace test
 		public static string EQUAL = "BOTH SAEM";//
 		public static string NOTEQUAL = "DIFFRINT OF"; //
 
-		public static string ONELINE = "BTW";//X
+		public static string ONELINE = "BTW";//done
 		public static string MULTILINE = "OBTW"; //
 		public static string ENDCOMMENT = "TLDR";//
 

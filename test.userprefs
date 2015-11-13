@@ -1,10 +1,10 @@
 ﻿<Properties StartupItem="test/test.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="test/LexemeCreator.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
     <Files>
-      <File FileName="test/LexemeCreator.cs" Line="50" Column="6" />
-      <File FileName="test/Constants.cs" Line="13" Column="49" />
-      <File FileName="test/MainWindow.cs" Line="89" Column="9" />
+      <File FileName="test/LexemeCreator.cs" Line="25" Column="4" />
+      <File FileName="test/MainWindow.cs" Line="243" Column="18" />
+      <File FileName="test/Constants.cs" Line="23" Column="28" />
       <File FileName="test/Program.cs" Line="1" Column="1" />
       <File FileName="test/Lexeme.cs" Line="1" Column="1" />
     </Files>
