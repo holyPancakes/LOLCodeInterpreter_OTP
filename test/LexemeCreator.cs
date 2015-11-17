@@ -23,15 +23,11 @@ namespace test
 			
 			List<Lexeme> lex = new List<Lexeme>();
 
-			foreach(char c in line)
-			{ //converts it to array of characters
+			foreach(char c in line) { //converts it to array of characters
 				//Console.WriteLine(token);
 				if(c == '\t')
-				{ 
 					continue; //ignore if it is a tab
-				}
-				else if(c == ' ' && !quotedDouble)
-				{ //checks if the character is space and not quoted
+				else if(c == ' ' && !quotedDouble) { //checks if the character is space and not quoted
 					if (token.EndsWith (" ") || token.Length == 0)
 						continue; //ignore if it is a space
 					else if (token.Equals (Constants.ONELINE)) {
@@ -54,9 +50,7 @@ namespace test
 							throw new SyntaxException ("Unexpected " + Constants.ENDCOMMENT + " without starting a comment!");
 					}else if (isComment) token = "";
 					else checker(lex, c); //else checks the token if it is a keyword or a value
-				}
-				else if(c == '\"')
-				{ //checks if the char is a double quotes
+				} else if(c == '\"') { //checks if the char is a double quotes
 					if(isComment) continue;
 					quotedDouble = !quotedDouble; //switches the flags of double quotes
 					if (!quotedDouble) { //if the double quote becomes false
@@ -64,25 +58,18 @@ namespace test
 						lex.Add (temp); //adds the lexeme to an array of lexemes
 						lex.Add (new Lexeme ("\"", "YARN Delimiter"));
 						str = ""; //resets the string
-					} else {
+					} else
 						lex.Add(new Lexeme("\"", "YARN Delimiter"));
-					}
 				}
 				else if(quotedDouble)
-				{
 					str += c; //append the char to string
-				}
 				else
-				{
 					token+=c;//appends the char to token otherwise
-				}
 			}
 			//Console.WriteLine(token);
 
-			if(quotedDouble)
-			{//checks if the string is properly closed
-				throw new SyntaxException("String not properly closed.");
-			}
+			if(quotedDouble) //checks if the string is properly closed
+				throw new SyntaxException ("String not properly closed.");
 			if (token.Equals (Constants.ONELINE)) {
 				Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
 				lex.Add(temp);
@@ -148,7 +135,7 @@ namespace test
 			else if (token.Equals (Constants.MKAY))
 				temp = new Lexeme (Constants.MKAY, "Closes the arity or concat");
 			else if (token.Equals (Constants.CONCAT))
-				temp = new Lexeme (Constants.CONCAT, "Concatenates a string");
+				temp = new Lexeme (Constants.CONCAT, "Operator that concatenates a string");
 			else if(token.Equals(Constants.STARTINIT))
 				temp = new Lexeme(Constants.STARTINIT, "Assigns value after declaration.");
 			else if(token.Equals(Constants.END_IF))

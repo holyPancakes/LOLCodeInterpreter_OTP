@@ -90,7 +90,7 @@ public partial class MainWindow: Gtk.Window
 		string[] sourceLines = sourceString.Split (delimeter);
 		for(int i=0 ; i< sourceLines.Length; i++) { //infinite loop
 			line = sourceLines [i];
-			lineField.Buffer.Text = i + ": " + line;
+			lineField.Buffer.Text = (i+1) + ": " + line;
 			try {
 				lexemeList = lexer.process (line); //creates an array of lexemes
 				parse (); //parses the lexemes
@@ -98,6 +98,11 @@ public partial class MainWindow: Gtk.Window
 				hasError = true;
 				outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
 				break;
+			} catch (WarningException e){
+				outputField.Buffer.Text += "\n" + "WARNING on line " + (i+1) + ": " + e.Message+ "\n";
+			} catch (Exception e){
+				outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + ": " + e.Message+ "\n";
+				return;
 			}
 			allLex.AddRange(lexemeList);
 			lexer.reset (); //resets the lexer
@@ -108,11 +113,13 @@ public partial class MainWindow: Gtk.Window
 
 	public void parse()
 	{ //processses the lexemes
-		//Console.WriteLine("PARSING:");
+		//Console.WriteLine("\nPARSING:");
 		char[] delimeter = {' '};
 		if (lexemeList.Count == 0)
 			return;
+		
 		for(int i=0; i < lexemeList.Count; i++){
+			Console.WriteLine (lexemeList.Count);
 			if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
 				if(hasStarted) throw new SyntaxException ("Unexpected " + Constants.STARTPROG + "!");
 				hasStarted = true;
@@ -121,23 +128,29 @@ public partial class MainWindow: Gtk.Window
 			else if(hasEnded)
 				throw new SyntaxException("Program already ended!");
 			else{
-				if(lexemeList[i].getName().Equals(Constants.PRINT)){ //checks if the keyword is VISIBLE
-					if(lexemeList.Count - i >= 2){ //checks if VISIBLE has arguments
-						Lexeme l = lexemeList[i+1]; //gets the next lexeme
-						if(l.getDescription().EndsWith("YARN Delimiter")){ //checks if it is a string constant
-							Lexeme yarn = lexemeList[i+2];
-							outputField.Buffer.Text += yarn.getName()+ "\n"; //prints the string
-							i+=3;
-						}else if(l.getDescription().Equals("Variable Identifier")){
-							if(!table.ContainsKey(l.getName())) //checks if the variable is already declared
-								throw new SyntaxException("Variable identifier '" + l.getName() + "' is not yet declared.");
-							Value val = table[l.getName()]; //gets the value of the variable
-							outputField.Buffer.Text += val.getValue()+ "\n"; //prints the value of the variable
-							i++; 
-						}else throw new SyntaxException(l.getName() + " is not printable!"); //error that a value is not printable
-					}else //else VISIBLE has no arguments
-						throw new SyntaxException("VISIBLE has no arguments!");
-				}else if(lexemeList[i].getName().Equals(Constants.SCAN)){
+				if (lexemeList [i].getName ().Equals (Constants.PRINT)) { //checks if the keyword is VISIBLE
+					if (lexemeList.Count - i >= 2) { //checks if VISIBLE has arguments
+						Lexeme l = lexemeList [i + 1]; //gets the next lexeme
+						String toWrite;
+						if (l.getName ().Equals ("\"")) { //checks if it is a string constant
+							Lexeme yarn = lexemeList [i + 2];
+							toWrite = yarn.getName () + "\n"; //prints the string
+							i += 3;
+						} else if (l.getDescription ().Equals ("Variable Identifier")) {
+							if (!table.ContainsKey (l.getName ())) //checks if the variable is already declared
+								throw new SyntaxException ("Variable identifier '" + l.getName () + "' is not yet declared.");
+							Value val = table [l.getName ()]; //gets the value of the variable
+							toWrite = val.getValue () + "\n"; //prints the value of the variable
+							i++;
+						} else if (l.getDescription ().Contains ("Operator")) {
+							i++;
+							toWrite = operatorList (lexemeList, ref i);
+						} else
+							throw new SyntaxException (l.getName () + " is not printable!"); //error that a value is not printable
+						outputField.Buffer.Text += toWrite;
+					} else //else VISIBLE has no arguments
+						throw new SyntaxException ("VISIBLE has no arguments!");
+				} else if (lexemeList [i].getName ().Equals (Constants.SCAN)) {
 					if (lexemeList.Count - i >= 2) {
 						if (table.ContainsKey (lexemeList [i + 1].getName ())) {
 							Dialog inputPrompt = null;
@@ -167,73 +180,116 @@ public partial class MainWindow: Gtk.Window
 							throw new SyntaxException ("Variable " + lexemeList [i + 1].getName () + " is not yet delcared!");
 					} else
 						throw new SyntaxException ("GIMMEH has no arguments!");
-				}else if(lexemeList[i].getName().Equals(Constants.VARDEC)){ //checks if the keyword is I HAS A
-					if(lexemeList.Count - i == 2){ //checks if I HAS A has arguments
-						Lexeme l = lexemeList[i+1]; //gets the next lexeme
-						if(l.getDescription().Equals("Variable Identifier")){ //checks if it is a variable identifier
-							if(table.ContainsKey(l.getName())) //checks if the variable is already in the table
-								throw new SyntaxException("Variable identifier " + l.getName() + " already exists.");
-							table.Add(l.getName(), new Value("NOOB", "Untyped")); //makes the variable NOOB
+				} else if (lexemeList [i].getName ().Equals (Constants.VARDEC)) { //checks if the keyword is I HAS A
+					if (lexemeList.Count - i == 2) { //checks if I HAS A has arguments
+						Lexeme l = lexemeList [i + 1]; //gets the next lexeme
+						if (l.getDescription ().Equals ("Variable Identifier")) { //checks if it is a variable identifier
+							if (table.ContainsKey (l.getName ())) //checks if the variable is already in the table
+								throw new SyntaxException ("Variable identifier " + l.getName () + " already exists.");
+							table.Add (l.getName (), new Value ("NOOB", "Untyped")); //makes the variable NOOB
 						}
 						i++; //increments the index
-					} else if(lexemeList.Count > 2){ //checks if the statement also starts with a value
-						Lexeme l1 = lexemeList[i+1]; //gets the next lexeme
-						if(l1.getDescription().Equals("Variable Identifier")){ //checks if it is a variable identifier
-							if(table.ContainsKey(l1.getName())) //checks if the variable is in the table
-								throw new SyntaxException("Variable " + l1.getName() + " already exists.");
-							Lexeme l2 = lexemeList[i+2]; //gets the next lexeme of next lexeme
-							if(l2.getName().Equals(Constants.STARTINIT)){ //checks if it is ITZ
-								Lexeme l3 = lexemeList[i+3]; //gets the argument of ITZ
-								if(l3.getDescription().EndsWith("constant")){ //checks if the argument is contstant
-									String[] type = l3.getDescription().Split(delimeter); //gets the datatype of the value
-									table.Add(l1.getName(), new Value(l3.getName(), type[0])); //puts it to table
-								}else if(table.ContainsKey(l3.getName())){ //checks if the argument is a variable and it is initialized
-									table.Add(l1.getName(), table[l3.getName()]); //copies the value and puts it to the table
-								}else if(l3.getDescription().Contains("Operator")){
-									table.Add(l1.getName(), new Value("NOOB", "Untyped")); //makes the variable NOOB
-								}else //else ITZ has no arguments
-									throw new SyntaxException("Expected constant or variable after ITZ.");
+					} else if (lexemeList.Count > 2) { //checks if the statement also starts with a value
+						Lexeme l1 = lexemeList [i + 1]; //gets the next lexeme
+						if (l1.getDescription ().Equals ("Variable Identifier")) { //checks if it is a variable identifier
+							if (table.ContainsKey (l1.getName ())) //checks if the variable is in the table
+								throw new SyntaxException ("Variable " + l1.getName () + " already exists.");
+							Lexeme l2 = lexemeList [i + 2]; //gets the next lexeme of next lexeme
+							if (l2.getName ().Equals (Constants.STARTINIT)) { //checks if it is ITZ
+								Lexeme l3 = lexemeList [i + 3]; //gets the argument of ITZ
+								if (l3.getDescription ().EndsWith ("constant")) { //checks if the argument is contstant
+									String[] type = l3.getDescription ().Split (delimeter); //gets the datatype of the value
+									table.Add (l1.getName (), new Value (l3.getName (), type [0])); //puts it to table
+								} else if (table.ContainsKey (l3.getName ())) { //checks if the argument is a variable and it is initialized
+									table.Add (l1.getName (), table [l3.getName ()]); //copies the value and puts it to the table
+								} else if (l3.getDescription ().Contains ("Operator")) {
+									table.Add (l1.getName (), new Value ("NOOB", "Untyped")); //makes the variable NOOB
+								} else //else ITZ has no arguments
+									throw new SyntaxException ("Expected constant or variable after ITZ.");
 							}
 						}
-						i+=3;
+						i += 3;
 					} else
-						throw new SyntaxException("I HAS A has no arguments!");
-				}else if(lexemeList[i].getName().Equals(Constants.ASSIGN)){ //checks if the keyword is R
-					Lexeme var = lexemeList[i-1]; //gets the left and right lexemes of R
-					Lexeme value = lexemeList[i+1];
-					if(var.getDescription().Equals("Variable Identifier")){ //checks if the left side is a variable
-						if(value.getDescription().EndsWith("constant")){ //checks if the right side is a constant
-							String[] type = value.getDescription().Split(delimeter); //gets the dataype
-							Value old = table[var.getName()]; //gets the old datatype of the variable
+						throw new SyntaxException ("I HAS A has no arguments!");
+				} else if (lexemeList [i].getName ().Equals (Constants.ASSIGN)) { //checks if the keyword is R
+					Lexeme var = lexemeList [i - 1]; //gets the left and right lexemes of R
+					Lexeme value = lexemeList [i + 1];
+					if (var.getDescription ().Equals ("Variable Identifier")) { //checks if the left side is a variable
+						if (value.getDescription ().EndsWith ("constant")) { //checks if the right side is a constant
+							String[] type = value.getDescription ().Split (delimeter); //gets the dataype
+							Value old = table [var.getName ()]; //gets the old datatype of the variable
 
-							table[var.getName()] =  new Value(value.getName(), type[0]); //puts new value to table
-						}else if(value.getDescription().Equals("Variable Identifier")){ //checks if the right side is a variable
-							if(!table.ContainsKey(value.getName())) //check if the variable is already declared
-								throw new SyntaxException("Variable " + value.getName() + " is not yet declared!");
+							table [var.getName ()] = new Value (value.getName (), type [0]); //puts new value to table
+						} else if (value.getDescription ().Equals ("Variable Identifier")) { //checks if the right side is a variable
+							if (!table.ContainsKey (value.getName ())) //check if the variable is already declared
+								throw new SyntaxException ("Variable " + value.getName () + " is not yet declared!");
 		
-							table.Add(var.getName(), table[value.getName()]); //changes the value of the variable
-						}else if(value.getDescription().Contains("Operator")){
+							table.Add (var.getName (), table [value.getName ()]); //changes the value of the variable
+						} else if (value.getDescription ().Contains ("Operator")) {
 							return;
-						}else //else the right side is neither a variable or a constant
-							throw new SyntaxException("Only variable or constants should be on left hand side of R");
+						} else //else the right side is neither a variable or a constant
+							throw new SyntaxException ("Only variable or constants should be on left hand side of R");
 
-					}else //else the left side is not a vairblae
-						throw new SyntaxException("Variable should be on left hand side of R. " + var.getName() + " is not a variable.");
+					} else //else the left side is not a vairblae
+						throw new SyntaxException ("Variable should be on left hand side of R. " + var.getName () + " is not a variable.");
 
 					i++;
-				}else if(lexemeList[i].getDescription().Equals("Variable Identifier")){ //checks if the keyword is KTHXBYE
-					if(!table.ContainsKey(lexemeList[i].getName())) //check if the variable is already declared
-						throw new SyntaxException("Variable " + lexemeList[i].getName() + " is not yet declared!");
-				}
-				else if(lexemeList[i].getName().Equals(Constants.ENDPROG)){ //checks if the keyword is KTHXBYE
+				} else if (lexemeList [i].getDescription ().Equals ("Variable Identifier")) { //checks if the keyword is KTHXBYE
+					if (!table.ContainsKey (lexemeList [i].getName ())) //check if the variable is already declared
+						throw new SyntaxException ("Variable " + lexemeList [i].getName () + " is not yet declared!");
+				} else if (lexemeList [i].getName ().Equals (Constants.ENDPROG)) { //checks if the keyword is KTHXBYE
 					hasEnded = true;
-				}
+				} else if (lexemeList[i].getDescription ().Contains ("Operator")) {
+					operatorList (lexemeList, ref i);
+				} else
+					throw new WarningException("Unexpected lexeme " + lexemeList[i].getName() + " found!");
 			}
 		}
 		//Console.WriteLine("========");
 	}
 
-	
+	private String operatorList(List<Lexeme> lexemeList, ref int index){
+		string name = lexemeList [index].getName ();
+		string result;
+		if (index + 1 == lexemeList.Count)
+			throw new SyntaxException (name + " has no arguments!");
+
+		index++;
+		if(name.Equals(Constants.CONCAT))
+			result = concatString (lexemeList, ref index);
+		else
+			throw new WarningException("Unexpected lexeme " + name + " found!");
+		
+		return result;
+	}
+
+	private String concatString(List<Lexeme> lexemeList, ref int index){
+		String result = "";
+		bool hasEnded = false;
+		for (int i = index; i < lexemeList.Count; i++) {
+			if (hasEnded)
+				throw new SyntaxException ("Unexpected " + lexemeList[i].getName() + " found!");
+			else if (lexemeList [i].getDescription ().EndsWith ("constant"))
+				result += lexemeList [i].getName();
+			else if (lexemeList[i].getDescription().EndsWith("Variable Identifier")){
+				if(table.ContainsKey(lexemeList[i].getName())){
+					string varname = lexemeList[i].getName();
+					if(table[varname].getValue().Equals("NOOB"))
+						continue;
+					else
+						result += table[varname].getValue();
+				} else
+					throw new SyntaxException("Variable " + lexemeList[index].getName() + " is not declared!");
+			} else if(lexemeList[i].getName().Equals(Constants.MKAY)){
+				hasEnded = true;
+			} else if(lexemeList[i].getName().Equals(Constants.AN) || lexemeList[i].getName().Equals("\"")){
+				continue;
+			} else
+				throw new SyntaxException( "Unexpected " + lexemeList[i].getName() + " found!");
+		}
+		index = lexemeList.Count;
+		return result;
+	}
 
 	public void UpdateTables(){
 		foreach (Lexeme l in allLex) {

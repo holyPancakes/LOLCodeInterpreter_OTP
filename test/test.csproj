@@ -74,6 +74,7 @@
     <Compile Include="Value.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="SyntaxException.cs" />
+    <Compile Include="WarningException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

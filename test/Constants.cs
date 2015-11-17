@@ -16,6 +16,7 @@ namespace test
 		public static string ENDPROG = "KTHXBYE"; //done
 		public static string STARTPROG = "HAI"; //done
 		public static string STARTINIT = "ITZ"; //done
+
 		public static string SCAN = "GIMMEH"; //
 		public static string CONDITION = "O RLY?"; //
 		public static string IF = "YA RLY"; //
