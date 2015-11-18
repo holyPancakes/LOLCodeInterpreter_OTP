@@ -314,9 +314,41 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	private void openFile (object sender, EventArgs e){
-		throw new NotImplementedException ();
-	}
+			Gtk.FileChooserDialog filechooser =
+				new Gtk.FileChooserDialog("Choose the file to open",
+				                          this,
+				                          FileChooserAction.Open,
+				                          "Cancel",ResponseType.Cancel,
+				                          "Open",ResponseType.Accept);
 
+			filechooser.Filter = new FileFilter ();
+			filechooser.Filter.Name = "LolCode";
+			filechooser.Filter.AddPattern("*.lol");
+			//"LOLCode Files (.lol)|*.lol|All Files (*.*)|*.*";
+			filechooser.SelectMultiple = false;
+
+			if (filechooser.Run() == (int)ResponseType.Accept) 
+			{
+				sourceText.Buffer.Text = "";
+				
+				this.pageLabel.Text = filechooser.Filename;
+				System.IO.FileStream file = System.IO.File.OpenRead(filechooser.Filename);
+				try{
+					using(StreamReader reader = new StreamReader(file)){
+						string line = reader.ReadToEnd();
+						sourceText.Buffer.Text = line;
+						reader.Close();
+					}
+				}catch(Exception ex){
+					this.outputField.Buffer.Text += "\nThe file could not be read: "+ ex.Message;
+				}
+				file.Close();
+			}
+
+
+			filechooser.Destroy();
+	}
+	
 	protected void CloseOnClick (object sender, EventArgs e)
 	{
 		Environment.Exit (0);

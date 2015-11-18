@@ -2,13 +2,13 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
     <Files>
-      <File FileName="test/LexemeCreator.cs" Line="69" Column="6" />
-      <File FileName="test/MainWindow.cs" Line="248" Column="25" />
-      <File FileName="test/Constants.cs" Line="46" Column="27" />
+      <File FileName="test/LexemeCreator.cs" Line="1" Column="1" />
+      <File FileName="test/MainWindow.cs" Line="334" Column="5" />
+      <File FileName="test/Constants.cs" Line="1" Column="1" />
       <File FileName="test/Program.cs" Line="1" Column="1" />
       <File FileName="test/Lexeme.cs" Line="1" Column="1" />
       <File FileName="test/SyntaxException.cs" Line="1" Column="1" />
-      <File FileName="test/WarningException.cs" Line="9" Column="26" />
+      <File FileName="test/WarningException.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
