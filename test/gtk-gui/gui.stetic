@@ -117,9 +117,9 @@
         <property name="Label" translatable="yes">Run program</property>
         <property name="ShortLabel" translatable="yes">Run program</property>
       </action>
-      <action id="RunProgramAction1">
+      <action id="RunProgramF5Action">
         <property name="Type">Action</property>
-        <property name="Label" translatable="yes">Run Program</property>
+        <property name="Label" translatable="yes">Run Program (F5)</property>
         <property name="ShortLabel" translatable="yes">Run Program</property>
         <signal name="Activated" handler="runProgramClick" />
       </action>
@@ -130,6 +130,7 @@
     <property name="Title" translatable="yes">MainWindow</property>
     <property name="WindowPosition">CenterAlways</property>
     <signal name="DeleteEvent" handler="OnDeleteEvent" />
+    <signal name="KeyPressEvent" handler="runProgramButton" after="yes" />
     <child>
       <widget class="Gtk.VBox" id="mainBox">
         <property name="MemberName" />
@@ -147,7 +148,7 @@
               <node type="Menu" action="ViewAction1" />
               <node type="Menu" action="EditAction1" />
               <node type="Menu" action="RunAction">
-                <node type="Menuitem" action="RunProgramAction1" />
+                <node type="Menuitem" action="RunProgramF5Action" />
               </node>
               <node type="Menu" action="HelpAction2">
                 <node type="Menuitem" action="AboutAction1" />

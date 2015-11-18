@@ -2,6 +2,7 @@ using System;
 using Gtk;
 using test;
 using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -10,7 +11,7 @@ public partial class MainWindow: Gtk.Window
 {	
 	LexemeCreator lexer = new LexemeCreator(); //for lexical analysis
 	List<Lexeme> lexemeList = new List<Lexeme>();
-	List<Lexeme> allLex = new List<Lexeme> ();
+	Stack<string> stack = new Stack<string> ();
 	String line;
 	char[] delimeter = {'\n'};
 
@@ -78,14 +79,17 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	public void Interpret(){
+		Console.WriteLine ("Interpret!");
 		outputField.Buffer.Text = "";
 		hasStarted = false;
 		hasEnded = false;
 		hasError = false;
 		tokensListStore.Clear ();
 		symbolTableListStore.Clear ();
-		allLex.Clear ();
+		lexemeList.Clear ();
 		table.Clear ();
+		stack.Clear ();
+
 		string sourceString = sourceText.Buffer.Text;
 		string[] sourceLines = sourceString.Split (delimeter);
 		for(int i=0 ; i< sourceLines.Length; i++) { //infinite loop
@@ -93,7 +97,10 @@ public partial class MainWindow: Gtk.Window
 			lineField.Buffer.Text = (i+1) + ": " + line;
 			try {
 				lexemeList = lexer.process (line); //creates an array of lexemes
+				UpdateLexemes(lexemeList);
+
 				parse (); //parses the lexemes
+				UpdateTables();
 			} catch (SyntaxException e) { //if something went wrong, prints the error on screen
 				hasError = true;
 				outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
@@ -104,7 +111,6 @@ public partial class MainWindow: Gtk.Window
 				outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + ": " + e.Message+ "\n";
 				return;
 			}
-			allLex.AddRange(lexemeList);
 			lexer.reset (); //resets the lexer
 		}
 		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length+1) + ": Program is not closed properly!\n";
@@ -115,12 +121,15 @@ public partial class MainWindow: Gtk.Window
 	{ //processses the lexemes
 		//Console.WriteLine("\nPARSING:");
 		char[] delimeter = {' '};
+		bool nextCommand = false;
+
 		if (lexemeList.Count == 0)
 			return;
 		
 		for(int i=0; i < lexemeList.Count; i++){
-			Console.WriteLine (lexemeList.Count);
-			if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
+			if (nextCommand)
+				throw new SyntaxException ("Expression already ended. Put " + lexemeList [i].getName () + " on next line.");
+			else if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
 				if(hasStarted) throw new SyntaxException ("Unexpected " + Constants.STARTPROG + "!");
 				hasStarted = true;
 			} else if (!hasStarted)
@@ -187,7 +196,8 @@ public partial class MainWindow: Gtk.Window
 							if (table.ContainsKey (l.getName ())) //checks if the variable is already in the table
 								throw new SyntaxException ("Variable identifier " + l.getName () + " already exists.");
 							table.Add (l.getName (), new Value ("NOOB", "Untyped")); //makes the variable NOOB
-						}
+						} else
+							throw new SyntaxException ("Expected variable declaration after " + Constants.VARDEC);
 						i++; //increments the index
 					} else if (lexemeList.Count > 2) { //checks if the statement also starts with a value
 						Lexeme l1 = lexemeList [i + 1]; //gets the next lexeme
@@ -203,11 +213,25 @@ public partial class MainWindow: Gtk.Window
 								} else if (table.ContainsKey (l3.getName ())) { //checks if the argument is a variable and it is initialized
 									table.Add (l1.getName (), table [l3.getName ()]); //copies the value and puts it to the table
 								} else if (l3.getDescription ().Contains ("Operator")) {
-									table.Add (l1.getName (), new Value ("NOOB", "Untyped")); //makes the variable NOOB
+									i += 3;
+									string val = operatorList (lexemeList, ref i);
+									string type = "";
+									if (Constants.NUMBRVAL.Match (val).Success)
+										type = "NUMBR";
+									else if (Constants.NUMBARVAL.Match(val).Success)
+										type = "NUMBAR";
+									else if (Constants.TROOFVAL.Match(val).Success)
+										type = "TROOF";
+									else 
+										type = "YARN";
+
+									table.Add (l1.getName (), new Value (val, type));
 								} else //else ITZ has no arguments
 									throw new SyntaxException ("Expected constant or variable after ITZ.");
-							}
-						}
+							} else
+								throw new SyntaxException ("Expected " + Constants.STARTINIT + " after variable declaration!");
+						} else
+							throw new SyntaxException ("Expected variable declaration after " + Constants.VARDEC);
 						i += 3;
 					} else
 						throw new SyntaxException ("I HAS A has no arguments!");
@@ -226,17 +250,30 @@ public partial class MainWindow: Gtk.Window
 		
 							table.Add (var.getName (), table [value.getName ()]); //changes the value of the variable
 						} else if (value.getDescription ().Contains ("Operator")) {
-							return;
+							i++;
+							string val = operatorList (lexemeList, ref i);
+							string type = "";
+							if (Constants.NUMBRVAL.Match (val).Success)
+								type = "NUMBR";
+							else if (Constants.NUMBARVAL.Match(val).Success)
+								type = "NUMBAR";
+							else if (Constants.TROOFVAL.Match(val).Success)
+								type = "TROOF";
+							else 
+								type = "YARN";
+
+							table[var.getName ()] = new Value (val, type);
 						} else //else the right side is neither a variable or a constant
 							throw new SyntaxException ("Only variable or constants should be on left hand side of R");
 
-					} else //else the left side is not a vairblae
+					} else //else the left side is not a variable
 						throw new SyntaxException ("Variable should be on left hand side of R. " + var.getName () + " is not a variable.");
 
 					i++;
 				} else if (lexemeList [i].getDescription ().Equals ("Variable Identifier")) { //checks if the keyword is KTHXBYE
 					if (!table.ContainsKey (lexemeList [i].getName ())) //check if the variable is already declared
 						throw new SyntaxException ("Variable " + lexemeList [i].getName () + " is not yet declared!");
+					nextCommand = true;
 				} else if (lexemeList [i].getName ().Equals (Constants.ENDPROG)) { //checks if the keyword is KTHXBYE
 					hasEnded = true;
 				} else if (lexemeList[i].getDescription ().Contains ("Operator")) {
@@ -244,21 +281,54 @@ public partial class MainWindow: Gtk.Window
 				} else
 					throw new WarningException("Unexpected lexeme " + lexemeList[i].getName() + " found!");
 			}
+			nextCommand = !nextCommand;
 		}
 		//Console.WriteLine("========");
 	}
 
 	private String operatorList(List<Lexeme> lexemeList, ref int index){
 		string name = lexemeList [index].getName ();
-		string result;
+		string result = "";
+		bool needAN = false;
+
 		if (index + 1 == lexemeList.Count)
 			throw new SyntaxException (name + " has no arguments!");
 
 		index++;
-		if(name.Equals(Constants.CONCAT))
+		if (name.Equals (Constants.CONCAT))
 			result = concatString (lexemeList, ref index);
+		else if (name.Equals (Constants.EQUAL)){
+			stack.Push ("=");
+			if (lexemeList.Count > 4)
+				throw new SyntaxException (Constants.EQUAL + " has so many operands!");
+			
+			for (; index < lexemeList.Count; index++, needAN = !needAN) {
+				name = lexemeList [index].getName ();
+				string dec = lexemeList[index].getDescription();
+
+				if (name.Equals (Constants.AN))
+					continue;
+				else if (needAN)
+					throw new SyntaxException ("Expected " + Constants.AN);
+				else if (dec.EndsWith ("constant"))
+					stack.Push (name);
+				else if (dec.Equals ("Variable Identifier")) {
+					if (!table.ContainsKey (name))
+						throw new SyntaxException (name + "is not yet declared!");
+					Value val = table [name];
+					stack.Push (val.getValue ());
+				} else
+					throw new WarningException ("None of the above in EQUAL");
+			}
+
+			if (!needAN)
+				throw new SyntaxException ("Lack of operands");
+			else
+				result = evaluate ();
+			Console.WriteLine (result);
+		}
 		else
-			throw new WarningException("Unexpected lexeme " + name + " found!");
+			throw new WarningException("Unexpected operator " + name + " found!");
 		
 		return result;
 	}
@@ -266,35 +336,73 @@ public partial class MainWindow: Gtk.Window
 	private String concatString(List<Lexeme> lexemeList, ref int index){
 		String result = "";
 		bool hasEnded = false;
-		for (int i = index; i < lexemeList.Count; i++) {
+		bool needNext = false;
+		for (; index < lexemeList.Count; index++) {
+			string name = lexemeList [index].getName ();
+			string dec = lexemeList [index].getDescription ();
+
 			if (hasEnded)
-				throw new SyntaxException ("Unexpected " + lexemeList[i].getName() + " found!");
-			else if (lexemeList [i].getDescription ().EndsWith ("constant"))
-				result += lexemeList [i].getName();
-			else if (lexemeList[i].getDescription().EndsWith("Variable Identifier")){
-				if(table.ContainsKey(lexemeList[i].getName())){
-					string varname = lexemeList[i].getName();
-					if(table[varname].getValue().Equals("NOOB"))
+				throw new SyntaxException ("Unexpected " + name + " found!");
+			else if (name.Equals(Constants.AN)){
+				if (needNext)
+					needNext = false;
+				else
+					throw new SyntaxException ("Needs " + Constants.AN + " to separate the arguments.");
+			} else if (dec.EndsWith ("constant")) {
+				result += name;
+				needNext = true;
+			}
+			else if (dec.EndsWith ("Variable Identifier")) {
+				if (table.ContainsKey (name)) {
+					string varname = name;
+					if (table [varname].getValue ().Equals ("NOOB"))
 						continue;
 					else
-						result += table[varname].getValue();
+						result += table [varname].getValue ();
 				} else
-					throw new SyntaxException("Variable " + lexemeList[index].getName() + " is not declared!");
-			} else if(lexemeList[i].getName().Equals(Constants.MKAY)){
+					throw new SyntaxException ("Variable " + name+ " is not declared!");
+				needNext = true;
+			} else if (name.Equals (Constants.MKAY)) {
 				hasEnded = true;
-			} else if(lexemeList[i].getName().Equals(Constants.AN) || lexemeList[i].getName().Equals("\"")){
+			} else if(name.Equals("\"")){
 				continue;
 			} else
-				throw new SyntaxException( "Unexpected " + lexemeList[i].getName() + " found!");
+				throw new SyntaxException( "Unexpected " + name + " found!");
 		}
-		index = lexemeList.Count;
 		return result;
 	}
 
-	public void UpdateTables(){
-		foreach (Lexeme l in allLex) {
+	private String evaluate(){		
+		String val1 = "";
+		String val2 = "";
+		String op = "";
+		try{
+			val1 = stack.Pop();
+			val2 = stack.Pop();
+			op = stack.Pop();
+		} catch(Exception e){
+			Console.WriteLine ("STACK HERE!");
+			throw new SyntaxException (e.Message);
+		}
+
+		switch (op) {
+		case "=":
+			if (val1 == val2)
+				return "WIN";
+			else
+				return "FAIL";
+		default:
+			throw new Exception ("Something went wrong in evaluate...");
+		}
+	}
+
+	public void UpdateLexemes(List<Lexeme> list){
+		foreach (Lexeme l in list) {
 			tokensListStore.AppendValues (l.getName(), l.getDescription());
 		}
+	}
+
+	public void UpdateTables(){
 		if (table.Count != 0) {
 			foreach (string key in table.Keys) {
 				Value val = table [key];
@@ -310,47 +418,60 @@ public partial class MainWindow: Gtk.Window
 	
 	protected void runProgramClick (object sender, EventArgs e){
 		Interpret ();
-		UpdateTables ();
 	}
 
 	private void openFile (object sender, EventArgs e){
-			Gtk.FileChooserDialog filechooser =
-				new Gtk.FileChooserDialog("Choose the file to open",
-				                          this,
-				                          FileChooserAction.Open,
-				                          "Cancel",ResponseType.Cancel,
-				                          "Open",ResponseType.Accept);
+		Gtk.FileChooserDialog filechooser =
+			new Gtk.FileChooserDialog("Choose the file to open",
+				this,
+				FileChooserAction.Open,
+				"Cancel",ResponseType.Cancel,
+				"Open",ResponseType.Accept);
 
-			filechooser.Filter = new FileFilter ();
-			filechooser.Filter.Name = "LolCode";
-			filechooser.Filter.AddPattern("*.lol");
-			//"LOLCode Files (.lol)|*.lol|All Files (*.*)|*.*";
-			filechooser.SelectMultiple = false;
+		filechooser.Filter = new FileFilter ();
+		filechooser.Filter.Name = "LolCode";
+		filechooser.Filter.AddPattern("*.lol");
+		//"LOLCode Files (.lol)|*.lol|All Files (*.*)|*.*";
+		filechooser.SelectMultiple = false;
 
-			if (filechooser.Run() == (int)ResponseType.Accept) 
-			{
-				sourceText.Buffer.Text = "";
-				
-				this.pageLabel.Text = filechooser.Filename;
-				System.IO.FileStream file = System.IO.File.OpenRead(filechooser.Filename);
-				try{
-					using(StreamReader reader = new StreamReader(file)){
-						string line = reader.ReadToEnd();
-						sourceText.Buffer.Text = line;
-						reader.Close();
-					}
-				}catch(Exception ex){
-					this.outputField.Buffer.Text += "\nThe file could not be read: "+ ex.Message;
+		if (filechooser.Run() == (int)ResponseType.Accept) 
+		{
+			sourceText.Buffer.Text = "";
+
+			this.pageLabel.Text = filechooser.Filename;
+			System.IO.FileStream file = System.IO.File.OpenRead(filechooser.Filename);
+			try{
+				using(StreamReader reader = new StreamReader(file)){
+					string line = reader.ReadToEnd();
+					sourceText.Buffer.Text = line;
+					reader.Close();
 				}
-				file.Close();
+			}catch(Exception ex){
+				this.outputField.Buffer.Text += "\nThe file could not be read: "+ ex.Message;
 			}
+			file.Close();
+		}
 
 
-			filechooser.Destroy();
+		filechooser.Destroy();
 	}
 	
 	protected void CloseOnClick (object sender, EventArgs e)
 	{
 		Environment.Exit (0);
+	}
+
+	protected void foo (object o, KeyPressEventArgs args)
+	{
+		if (args.Event.Key == Gdk.Key.F5) {
+			Interpret ();
+		}
+	}
+
+	protected void runProgramButton (object o, KeyPressEventArgs args)
+	{
+		if (args.Event.Key == Gdk.Key.F5) {
+			Interpret ();
+		}
 	}
 }

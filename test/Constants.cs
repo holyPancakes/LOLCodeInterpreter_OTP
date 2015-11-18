@@ -43,8 +43,8 @@ namespace test
 		public static string MANY_AND = "ALL OF"; //
 		public static string MANY_OR = "ANY OF"; //
 
-		public static String CONCAT = "SMOOSH";//
-		public static string MKAY = "MKAY"; //
+		public static String CONCAT = "SMOOSH";//done
+		public static string MKAY = "MKAY"; //done
 
 		public static string EQUAL = "BOTH SAEM";//
 		public static string NOTEQUAL = "DIFFRINT OF"; //

@@ -79,6 +79,7 @@
         <property name="Type">Action</property>
         <property name="Label" translatable="yes">Open File</property>
         <property name="ShortLabel" translatable="yes">Save</property>
+        <signal name="Activated" handler="openFile" />
       </action>
       <action id="SaveAction">
         <property name="Type">Action</property>
@@ -129,6 +130,7 @@
     <property name="Title" translatable="yes">MainWindow</property>
     <property name="WindowPosition">CenterAlways</property>
     <signal name="DeleteEvent" handler="OnDeleteEvent" />
+    <signal name="KeyPressEvent" handler="runProgramButton" after="yes" />
     <child>
       <widget class="Gtk.VBox" id="mainBox">
         <property name="MemberName" />
@@ -190,7 +192,7 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="Gtk.Label" id="label2">
+                      <widget class="Gtk.Label" id="pageLabel">
                         <property name="MemberName" />
                         <property name="LabelProp" translatable="yes">source.lol</property>
                       </widget>
