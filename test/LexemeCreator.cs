@@ -42,12 +42,12 @@ namespace test
 						token = "";
 					} else if (token.Equals (Constants.ENDCOMMENT)) {
 						if (isComment) {
-							Lexeme temp = new Lexeme(Constants.ENDCOMMENT, "Ends the comment");
-							lex.Add(temp);
+							Lexeme temp = new Lexeme (Constants.ENDCOMMENT, "Ends the comment");
+							lex.Add (temp);
 							isComment = false;
 							token = "";
 						} else
-							throw new SyntaxException ("Unexpected " + Constants.ENDCOMMENT + " without starting a comment!");
+							throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
 					}else if (isComment) token = "";
 					else checker(lex, c); //else checks the token if it is a keyword or a value
 				} else if(c == '\"') { //checks if the char is a double quotes
@@ -69,7 +69,7 @@ namespace test
 			//Console.WriteLine(token);
 
 			if(quotedDouble) //checks if the string is properly closed
-				throw new SyntaxException ("String not properly closed.");
+				throw new SyntaxException (WarningMessage.lackDoubleQuote());
 			if (token.Equals (Constants.ONELINE)) {
 				Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
 				lex.Add(temp);
@@ -82,18 +82,18 @@ namespace test
 				token = "";
 			} else if (token.Equals (Constants.ENDCOMMENT)) {
 				if (isComment) {
-					Lexeme temp = new Lexeme(Constants.ENDCOMMENT, "Ends the comment");
-					lex.Add(temp);
+					Lexeme temp = new Lexeme (Constants.ENDCOMMENT, "Ends the comment");
+					lex.Add (temp);
 					isComment = false;
 					token = "";
 				} else
-					throw new SyntaxException ("Unexpected " + Constants.ENDCOMMENT + " without starting a comment!");
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
 			}else if (isComment) token = "";
 			else checker(lex, '\n'); //checks the token of it is not yet empty
 
 			if(token.Length!=0)
 			{ //checks if the token is not a keyword and found dangling in the code
-				throw new SyntaxException(string.Concat(token,": keyword not found."));
+				throw new SyntaxException(WarningMessage.unexpectedLexeme (token));
 			}
 
 			return lex; //returns the array of lexemes

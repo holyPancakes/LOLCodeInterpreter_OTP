@@ -47,7 +47,7 @@ public partial class MainWindow
 	
 	private global::Gtk.Action RunProgramAction;
 	
-	private global::Gtk.Action RunProgramAction1;
+	private global::Gtk.Action RunProgramF5Action;
 	
 	private global::Gtk.VBox mainBox;
 	
@@ -160,9 +160,9 @@ public partial class MainWindow
 		this.RunProgramAction = new global::Gtk.Action ("RunProgramAction", global::Mono.Unix.Catalog.GetString ("Run program"), null, null);
 		this.RunProgramAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Run program");
 		w1.Add (this.RunProgramAction, null);
-		this.RunProgramAction1 = new global::Gtk.Action ("RunProgramAction1", global::Mono.Unix.Catalog.GetString ("Run Program"), null, null);
-		this.RunProgramAction1.ShortLabel = global::Mono.Unix.Catalog.GetString ("Run Program");
-		w1.Add (this.RunProgramAction1, null);
+		this.RunProgramF5Action = new global::Gtk.Action ("RunProgramF5Action", global::Mono.Unix.Catalog.GetString ("Run Program (F5)"), null, null);
+		this.RunProgramF5Action.ShortLabel = global::Mono.Unix.Catalog.GetString ("Run Program");
+		w1.Add (this.RunProgramF5Action, null);
 		this.UIManager.InsertActionGroup (w1, 0);
 		this.AddAccelGroup (this.UIManager.AccelGroup);
 		this.WidthRequest = 800;
@@ -175,7 +175,7 @@ public partial class MainWindow
 		this.mainBox.Name = "mainBox";
 		this.mainBox.Spacing = 6;
 		// Container child mainBox.Gtk.Box+BoxChild
-		this.UIManager.AddUiFromString ("<ui><menubar name='menubar'><menu name='FileAction' action='FileAction'><menuitem name='OpenFileAction' action='OpenFileAction'/><menuitem name='SaveAction' action='SaveAction'/><menuitem name='SaveAsAction' action='SaveAsAction'/><menuitem name='ExitAction' action='ExitAction'/></menu><menu name='ViewAction1' action='ViewAction1'/><menu name='EditAction1' action='EditAction1'/><menu name='RunAction' action='RunAction'><menuitem name='RunProgramAction1' action='RunProgramAction1'/></menu><menu name='HelpAction2' action='HelpAction2'><menuitem name='AboutAction1' action='AboutAction1'/></menu></menubar></ui>");
+		this.UIManager.AddUiFromString ("<ui><menubar name='menubar'><menu name='FileAction' action='FileAction'><menuitem name='OpenFileAction' action='OpenFileAction'/><menuitem name='SaveAction' action='SaveAction'/><menuitem name='SaveAsAction' action='SaveAsAction'/><menuitem name='ExitAction' action='ExitAction'/></menu><menu name='ViewAction1' action='ViewAction1'/><menu name='EditAction1' action='EditAction1'/><menu name='RunAction' action='RunAction'><menuitem name='RunProgramF5Action' action='RunProgramF5Action'/></menu><menu name='HelpAction2' action='HelpAction2'><menuitem name='AboutAction1' action='AboutAction1'/></menu></menubar></ui>");
 		this.menubar = ((global::Gtk.MenuBar)(this.UIManager.GetWidget ("/menubar")));
 		this.menubar.Name = "menubar";
 		this.mainBox.Add (this.menubar);
@@ -338,6 +338,6 @@ public partial class MainWindow
 		this.KeyPressEvent += new global::Gtk.KeyPressEventHandler (this.runProgramButton);
 		this.OpenFileAction.Activated += new global::System.EventHandler (this.openFile);
 		this.ExitAction.Activated += new global::System.EventHandler (this.CloseOnClick);
-		this.RunProgramAction1.Activated += new global::System.EventHandler (this.runProgramClick);
+		this.RunProgramF5Action.Activated += new global::System.EventHandler (this.runProgramClick);
 	}
 }
