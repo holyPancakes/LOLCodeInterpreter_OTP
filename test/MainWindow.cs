@@ -251,7 +251,14 @@ public partial class MainWindow: Gtk.Window
 							Value old = table [var.getName ()]; //gets the old datatype of the variable
 
 							table [var.getName ()] = new Value (value.getName (), type [0]); //puts new value to table
-						} else if (value.getDescription ().Equals ("Variable Identifier")) { //checks if the right side is a variable
+						} else if(value.getName().Equals("\"")){
+							Lexeme yarn = lexemeList [i + 2];
+							String[] type = yarn.getDescription ().Split (delimeter); //gets the dataype
+							Value old = table [var.getName ()]; //gets the old datatype of the variable
+
+							table [var.getName ()] = new Value (yarn.getName (), type [0]); //puts new value to table
+							i+=2;
+						}else if (value.getDescription ().Equals ("Variable Identifier")) { //checks if the right side is a variable
 							if (!table.ContainsKey (value.getName ())) //check if the variable is already declared
 								throw new SyntaxException (WarningMessage.varNoDec (value.getName ()));
 		
