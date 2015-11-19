@@ -149,7 +149,7 @@ public partial class MainWindow: Gtk.Window
 							i += 3;
 						} else if (l.getDescription ().Equals ("Variable Identifier")) {
 							if (!table.ContainsKey (l.getName ())) //checks if the variable is already declared
-								throw new SyntaxException (WarningMessage.varNoDec(l.getName ()));
+								throw new SyntaxException (WarningMessage.varNoDec (l.getName ()));
 							Value val = table [l.getName ()]; //gets the value of the variable
 							toWrite = val.getValue () + "\n"; //prints the value of the variable
 							i++;
@@ -157,10 +157,10 @@ public partial class MainWindow: Gtk.Window
 							i++;
 							toWrite = operatorList (lexemeList, ref i);
 						} else
-							throw new SyntaxException (WarningMessage.notPrintable(l.getName ()));
+							throw new SyntaxException (WarningMessage.notPrintable (l.getName ()));
 						outputField.Buffer.Text += toWrite;
 					} else //else VISIBLE has no arguments
-						throw new SyntaxException (WarningMessage.noArguments(Constants.PRINT));
+						throw new SyntaxException (WarningMessage.noArguments (Constants.PRINT));
 				} else if (lexemeList [i].getName ().Equals (Constants.SCAN)) {
 					if (lexemeList.Count - i >= 2) {
 						if (table.ContainsKey (lexemeList [i + 1].getName ())) {
@@ -188,9 +188,9 @@ public partial class MainWindow: Gtk.Window
 								}
 							}
 						} else
-							throw new SyntaxException (WarningMessage.varNoDec(lexemeList [i + 1].getName ()));
+							throw new SyntaxException (WarningMessage.varNoDec (lexemeList [i + 1].getName ()));
 					} else
-						throw new SyntaxException (WarningMessage.noArguments(Constants.SCAN));
+						throw new SyntaxException (WarningMessage.noArguments (Constants.SCAN));
 				} else if (lexemeList [i].getName ().Equals (Constants.VARDEC)) { //checks if the keyword is I HAS A
 					if (lexemeList.Count - i == 2) { //checks if I HAS A has arguments
 						Lexeme l = lexemeList [i + 1]; //gets the next lexeme
@@ -212,6 +212,11 @@ public partial class MainWindow: Gtk.Window
 								if (l3.getDescription ().EndsWith ("constant")) { //checks if the argument is contstant
 									String[] type = l3.getDescription ().Split (delimeter); //gets the datatype of the value
 									table.Add (l1.getName (), new Value (l3.getName (), type [0])); //puts it to table
+								} else if (l3.getName().Equals("\"")) { //else ITZ has no arguments
+									Lexeme l4 = lexemeList [i + 4];
+									String[] type = l4.getDescription ().Split (delimeter); //gets the datatype of the value
+									table.Add (l1.getName (), new Value (l4.getName (), type [0])); //puts it to table
+									i+=2;
 								} else if (table.ContainsKey (l3.getName ())) { //checks if the argument is a variable and it is initialized
 									table.Add (l1.getName (), table [l3.getName ()]); //copies the value and puts it to the table
 								} else if (l3.getDescription ().Contains ("Operator")) {
@@ -228,7 +233,7 @@ public partial class MainWindow: Gtk.Window
 										type = "YARN";
 
 									table.Add (l1.getName (), new Value (val, type));
-								} else //else ITZ has no arguments
+								} else
 									throw new SyntaxException (WarningMessage.expectedWord ("constant or variable", Constants.STARTINIT));
 							} else
 								throw new SyntaxException (WarningMessage.expectedWord (Constants.STARTINIT, "variable declaration"));
@@ -248,7 +253,7 @@ public partial class MainWindow: Gtk.Window
 							table [var.getName ()] = new Value (value.getName (), type [0]); //puts new value to table
 						} else if (value.getDescription ().Equals ("Variable Identifier")) { //checks if the right side is a variable
 							if (!table.ContainsKey (value.getName ())) //check if the variable is already declared
-								throw new SyntaxException (WarningMessage.varNoDec(value.getName ()));
+								throw new SyntaxException (WarningMessage.varNoDec (value.getName ()));
 		
 							table.Add (var.getName (), table [value.getName ()]); //changes the value of the variable
 						} else if (value.getDescription ().Contains ("Operator")) {
@@ -257,28 +262,28 @@ public partial class MainWindow: Gtk.Window
 							string type = "";
 							if (Constants.NUMBRVAL.Match (val).Success)
 								type = "NUMBR";
-							else if (Constants.NUMBARVAL.Match(val).Success)
+							else if (Constants.NUMBARVAL.Match (val).Success)
 								type = "NUMBAR";
-							else if (Constants.TROOFVAL.Match(val).Success)
+							else if (Constants.TROOFVAL.Match (val).Success)
 								type = "TROOF";
-							else 
+							else
 								type = "YARN";
 
-							table[var.getName ()] = new Value (val, type);
+							table [var.getName ()] = new Value (val, type);
 						} else //else the right side is neither a variable or a constant
-							throw new SyntaxException (WarningMessage.RRightSide());
+							throw new SyntaxException (WarningMessage.RRightSide ());
 
 					} else //else the left side is not a variable
-						throw new SyntaxException (WarningMessage.RLefttSide());
+						throw new SyntaxException (WarningMessage.RLefttSide ());
 
 					i++;
 				} else if (lexemeList [i].getDescription ().Equals ("Variable Identifier")) { //checks if the keyword is KTHXBYE
 					if (!table.ContainsKey (lexemeList [i].getName ())) //check if the variable is already declared
-						throw new SyntaxException (WarningMessage.varNoDec(lexemeList [i].getName ()));
+						throw new SyntaxException (WarningMessage.varNoDec (lexemeList [i].getName ()));
 					nextCommand = true;
 				} else if (lexemeList [i].getName ().Equals (Constants.ENDPROG)) { //checks if the keyword is KTHXBYE
 					hasEnded = true;
-				} else if (lexemeList[i].getDescription ().Contains ("Operator")) {
+				} else if (lexemeList [i].getDescription ().Contains ("Operator")) {
 					operatorList (lexemeList, ref i);
 				} else
 					throw new WarningException(WarningMessage.unexpectedLexeme(lexemeList[i].getName()));
@@ -415,6 +420,7 @@ public partial class MainWindow: Gtk.Window
 		if (table.Count != 0) {
 			foreach (string key in table.Keys) {
 				Value val = table [key];
+				symbolTableListStore.Clear ();
 				symbolTableListStore.AppendValues (key, val.getValue (), val.getType ());
 			}
 		}
