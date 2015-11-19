@@ -140,6 +140,8 @@ namespace test
 				temp = new Lexeme(Constants.STARTINIT, "Assigns value after declaration.");
 			else if(token.Equals(Constants.END_IF))
 				temp = new Lexeme(Constants.END_IF, "Ends if");
+			else if (token.Equals (Constants.NOTEQUAL))
+				temp = new Lexeme (Constants.NOTEQUAL, "Operator for not equal comparison");
 			else if (token.StartsWith ("A")) {
 				if (token.Equals (Constants.MANY_AND))
 					temp = new Lexeme (Constants.MANY_AND, "AND Arity Operator");
@@ -188,8 +190,6 @@ namespace test
 			else if (token.StartsWith ("D")) {
 				if (token.Equals (Constants.SUB))
 					temp = new Lexeme (Constants.SUB, "Operator that subtracts two numbers");
-				else if (token.Equals (Constants.NOTEQUAL))
-					temp = new Lexeme (Constants.NOTEQUAL, "Operator for not equal comparison");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], "Variable Identifier");

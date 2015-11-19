@@ -47,7 +47,7 @@ namespace test
 		public static string MKAY = "MKAY"; //done
 
 		public static string EQUAL = "BOTH SAEM";//
-		public static string NOTEQUAL = "DIFFRINT OF"; //
+		public static string NOTEQUAL = "DIFFRINT"; //
 
 		public static string ONELINE = "BTW";//done
 		public static string MULTILINE = "OBTW"; //

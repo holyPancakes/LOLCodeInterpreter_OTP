@@ -308,11 +308,13 @@ public partial class MainWindow: Gtk.Window
 			throw new SyntaxException (WarningMessage.noArguments(name));
 
 		index++;
-		if (name.Equals (Constants.CONCAT))
+		if (name.Equals (Constants.CONCAT)) {
 			result = concatString (lexemeList, ref index);
-		else if (name.Equals (Constants.EQUAL)){
+		} else if (name.Equals (Constants.EQUAL)){
 			result = checkEqual (lexemeList, ref index);
-		}
+		} else if (name.Equals (Constants.NOTEQUAL)) {
+			result = checkNotEqual (lexemeList, ref index);	
+		} 
 		else
 			throw new WarningException(WarningMessage.unexpectedLexeme(name));
 		
@@ -352,6 +354,42 @@ public partial class MainWindow: Gtk.Window
 		else
 			result = evaluate ();
 		
+		return result;
+	}
+
+	private String checkNotEqual(List<Lexeme> lexemeList, ref int index){
+		string name = "";
+		string result = "";
+		bool needAN = false;
+
+		stack.Push ("!");
+		if (lexemeList.Count - index > 4)
+			throw new SyntaxException (WarningMessage.tooManyOperands(Constants.NOTEQUAL));
+
+		for (; index < lexemeList.Count; index++, needAN = !needAN) {
+			name = lexemeList [index].getName ();
+			string dec = lexemeList[index].getDescription();
+
+			if (name.Equals (Constants.AN))
+				continue;
+			else if (needAN)
+				throw new SyntaxException (WarningMessage.expectedLexeme(Constants.AN));
+			else if (dec.EndsWith ("constant"))
+				stack.Push (name);
+			else if (dec.Equals ("Variable Identifier")) {
+				if (!table.ContainsKey (name))
+					throw new SyntaxException (WarningMessage.varNoDec(name));
+				Value val = table [name];
+				stack.Push (val.getValue ());
+			} else
+				throw new WarningException ("None of the above in EQUAL");
+		}
+
+		if (!needAN)
+			throw new SyntaxException (WarningMessage.noArguments(Constants.NOTEQUAL));
+		else
+			result = evaluate ();
+
 		return result;
 	}
 
@@ -409,6 +447,11 @@ public partial class MainWindow: Gtk.Window
 		switch (op) {
 		case "=":
 			if (val1 == val2)
+				return "WIN";
+			else
+				return "FAIL";
+		case "!":
+			if (val1 != val2)
 				return "WIN";
 			else
 				return "FAIL";
