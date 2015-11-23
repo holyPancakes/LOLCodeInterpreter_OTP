@@ -1,6 +1,12 @@
 ﻿<Properties StartupItem="test/test.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
+    <Files>
+      <File FileName="test/MainWindow.cs" Line="72" Column="50" />
+      <File FileName="test/WarningMessage.cs" Line="8" Column="39" />
+      <File FileName="test/Constants.cs" Line="56" Column="43" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

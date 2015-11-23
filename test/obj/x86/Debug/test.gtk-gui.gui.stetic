@@ -130,7 +130,6 @@
     <property name="Title" translatable="yes">MainWindow</property>
     <property name="WindowPosition">CenterAlways</property>
     <signal name="DeleteEvent" handler="OnDeleteEvent" />
-    <signal name="KeyPressEvent" handler="runProgramButton" after="yes" />
     <child>
       <widget class="Gtk.VBox" id="mainBox">
         <property name="MemberName" />
@@ -187,6 +186,7 @@
                             <property name="CanFocus">True</property>
                             <property name="ShowScrollbars">True</property>
                             <property name="Text" translatable="yes" />
+                            <signal name="KeyPressEvent" handler="runProgramButton" after="yes" />
                           </widget>
                         </child>
                       </widget>

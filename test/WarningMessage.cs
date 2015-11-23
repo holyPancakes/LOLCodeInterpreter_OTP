@@ -4,6 +4,10 @@ namespace test
 {
 	public class WarningMessage
 	{
+		public static String shouldSame(string name1, string name2){
+			return name1 + " and " + name2 + " should be the same!";
+		}
+
 		public static String unexpectedLexeme(String name){
 			return "Unexpected " + name + " found!";
 		}

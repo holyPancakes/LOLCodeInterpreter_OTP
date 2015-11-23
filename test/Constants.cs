@@ -53,6 +53,8 @@ namespace test
 		public static string MULTILINE = "OBTW"; //
 		public static string ENDCOMMENT = "TLDR";//
 
+		public static String IMPLICITVAR = "IT";
+
 		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		public static Regex NUMBRVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		public static Regex NUMBARVAL = new Regex (numbar, RegexOptions.Compiled | RegexOptions.IgnoreCase);
