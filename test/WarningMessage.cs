@@ -60,6 +60,10 @@ namespace test
 			return "Expected " + word1 + " after " + word2;
 		}
 
+		public static String lackOperands(String name){
+			return "Lack of operands in " + name +"!";
+		}
+
 		public static String lackOperands(){
 			return "Lack of operands!";
 		}

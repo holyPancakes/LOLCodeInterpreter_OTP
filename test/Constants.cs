@@ -3,57 +3,57 @@ using System.Text.RegularExpressions;
 
 namespace test
 {
-	public class Constants
+	public static class Constants
 	{
-		private static String varIdent = "^[A-Za-z][A-Za-z0-9_]*$"; //regex for variable
-		private static String numbr = "^\\d+$"; //regex for numbr
-		private static String numbar = "^(\\d+|\\d*\\.\\d+)$"; //regex for numbar
-		private static String troof = "^(WIN|FAIL)$"; //regex for troof
+		private const String varIdent = "^[A-Za-z][A-Za-z0-9_]*$"; //regex for variable
+		private const String numbr = "^\\d+$"; //regex for numbr
+		private const String numbar = "^(\\d+|\\d*\\.\\d+)$"; //regex for numbar
+		private const String troof = "^(WIN|FAIL)$"; //regex for troof
 
-		public static string PRINT = "VISIBLE"; //done
-		public static string VARDEC = "I HAS A"; //done
-		public static string ASSIGN = "R"; //done
-		public static string ENDPROG = "KTHXBYE"; //done
-		public static string STARTPROG = "HAI"; //done
-		public static string STARTINIT = "ITZ"; //done
+		public const string PRINT = "VISIBLE"; //done
+		public const string VARDEC = "I HAS A"; //done
+		public const string ASSIGN = "R"; //done
+		public const string ENDPROG = "KTHXBYE"; //done
+		public const string STARTPROG = "HAI"; //done
+		public const string STARTINIT = "ITZ"; //done
 
-		public static string SCAN = "GIMMEH"; //
-		public static string CONDITION = "O RLY?"; //
-		public static string IF = "YA RLY"; //
-		public static string ELSE = "NO WAI"; //
-		public static string END_IF = "OIC";
-		public static string SWITCH = "WTF?"; //
-		public static string CASE = "OMG"; //
-		public static string DEFAULT = "OMGWTF"; //
-		public static string BREAK = "GTFO"; //
+		public const string SCAN = "GIMMEH"; //
+		public const string CONDITION = "O RLY?"; //
+		public const string IF = "YA RLY"; //
+		public const string ELSE = "NO WAI"; //
+		public const string END_IF = "OIC";
+		public const string SWITCH = "WTF?"; //
+		public const string CASE = "OMG"; //
+		public const string DEFAULT = "OMGWTF"; //
+		public const string BREAK = "GTFO"; //
 
-		public static string AN = "AN";//done
-		public static string ADD = "SUM OF";//done
-		public static string SUB = "DIFF OF"; //under
-		public static string MUL = "PRODUKT OF"; //under
-		public static string DIV = "QUOSHUNT OF";//under
-		public static string MOD = "MOD OF";//under
-		public static string MAX = "BIGGR OF";//under
-		public static string MIN = "SMALLR OF";//under
+		public const string AN = "AN";//done
+		public const string ADD = "SUM OF";//done
+		public const string SUB = "DIFF OF"; //under
+		public const string MUL = "PRODUKT OF"; //under
+		public const string DIV = "QUOSHUNT OF";//under
+		public const string MOD = "MOD OF";//under
+		public const string MAX = "BIGGR OF";//under
+		public const string MIN = "SMALLR OF";//under
 
-		public static string AND = "BOTH OF";//
-		public static string OR = "EITHER OF";//
-		public static string XOR = "WON OF"; //
-		public static string NOT = "NOT"; //
-		public static string MANY_AND = "ALL OF"; //
-		public static string MANY_OR = "ANY OF"; //
+		public const string AND = "BOTH OF";//
+		public const string OR = "EITHER OF";//
+		public const string XOR = "WON OF"; //
+		public const string NOT = "NOT"; //
+		public const string MANY_AND = "ALL OF"; //
+		public const string MANY_OR = "ANY OF"; //
 
-		public static String CONCAT = "SMOOSH";//done
-		public static string MKAY = "MKAY"; //done
+		public const String CONCAT = "SMOOSH";//done
+		public const string MKAY = "MKAY"; //done
 
-		public static string EQUAL = "BOTH SAEM";//
-		public static string NOTEQUAL = "DIFFRINT"; //
+		public const string EQUAL = "BOTH SAEM";//
+		public const string NOTEQUAL = "DIFFRINT"; //
 
-		public static string ONELINE = "BTW";//done
-		public static string MULTILINE = "OBTW"; //
-		public static string ENDCOMMENT = "TLDR";//
+		public const string ONELINE = "BTW";//done
+		public const string MULTILINE = "OBTW"; //
+		public const string ENDCOMMENT = "TLDR";//
 
-		public static String IMPLICITVAR = "IT";
+		public const String IMPLICITVAR = "IT";
 
 		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		public static Regex NUMBRVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);

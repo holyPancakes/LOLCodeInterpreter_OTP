@@ -131,7 +131,7 @@ namespace test
 			else if (token.Equals (Constants.AN))
 				temp = new Lexeme (Constants.AN, "Separates arguments");
 			else if (token.Equals (Constants.NOT))
-				temp = new Lexeme (Constants.NOT, "Operator that negates the condition");
+				temp = new Lexeme (Constants.NOT, "Operator NOT that negates the condition");
 			else if (token.Equals (Constants.MKAY))
 				temp = new Lexeme (Constants.MKAY, "Closes the arity or concat");
 			else if (token.Equals (Constants.CONCAT))
@@ -168,7 +168,7 @@ namespace test
 				if (token.Equals (Constants.MAX))
 					temp = new Lexeme (Constants.MAX, "Operator that gets the bigger number");
 				else if (token.Equals (Constants.AND))
-					temp = new Lexeme (Constants.AND, "Logical Operator and");
+					temp = new Lexeme (Constants.AND, "Logical Operator AND");
 				else if (token.Equals (Constants.EQUAL))
 					temp = new Lexeme (Constants.EQUAL, "Operator for equal comparison");
 				else if((!token.EndsWith("OF") || !token.EndsWith("SAEM")) && token.Contains(" ")){

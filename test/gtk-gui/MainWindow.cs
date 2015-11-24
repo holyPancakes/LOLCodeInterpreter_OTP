@@ -338,6 +338,5 @@ public partial class MainWindow
 		this.OpenFileAction.Activated += new global::System.EventHandler (this.openFile);
 		this.ExitAction.Activated += new global::System.EventHandler (this.CloseOnClick);
 		this.RunProgramF5Action.Activated += new global::System.EventHandler (this.runProgramClick);
-		this.sourceText.KeyPressEvent += new global::Gtk.KeyPressEventHandler (this.runProgramButton);
 	}
 }

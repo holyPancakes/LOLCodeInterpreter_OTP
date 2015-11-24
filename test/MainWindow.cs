@@ -11,8 +11,7 @@ public partial class MainWindow: Gtk.Window
 {	
 	private LexemeCreator lexer = new LexemeCreator(); //for lexical analysis
 	private List<Lexeme> lexemeList = new List<Lexeme>();
-	private Stack<string> stack = new Stack<string> ();
-	private Stack<Value> stackCond = new Stack<Value> ();
+	private Stack<Value> stack = new Stack<Value> ();
 	private String line;
 	private char[] delimeter = {'\n'};
 
@@ -92,7 +91,6 @@ public partial class MainWindow: Gtk.Window
 		lexemeList.Clear ();
 		table.Clear ();
 		stack.Clear ();
-		stackCond.Clear ();
 
 		table.Add (Constants.IMPLICITVAR, new Value ("NOOB", "Untyped"));
 
@@ -114,7 +112,7 @@ public partial class MainWindow: Gtk.Window
 			} catch (WarningException e){
 				outputField.Buffer.Text += "\n" + "WARNING on line " + (i+1) + ": " + e.Message+ "\n";
 			} catch (Exception e){
-				outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + ": " + e.Message+ "\n";
+				outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + ": " + e.StackTrace+ "\n";
 				return;
 			}
 			lexer.reset (); //resets the lexer
@@ -169,7 +167,7 @@ public partial class MainWindow: Gtk.Window
 					else
 						type = "YARN";
 
-					table.Add (Constants.IMPLICITVAR, new Value (value, type));
+					table[Constants.IMPLICITVAR] = new Value (value, type);
 				} else
 					throw new WarningException(WarningMessage.unexpectedLexeme(lexemeList[i].getName()));
 			}
@@ -335,14 +333,15 @@ public partial class MainWindow: Gtk.Window
 		if (index + 1 == lexemeList.Count)
 			throw new SyntaxException (WarningMessage.noArguments(lexemeList[index].getName()));
 
-		string name = lexemeList [index].getName ();;
+		string name = lexemeList [index].getName ();
+		string dec = lexemeList [index].getDescription ();
 		string result = "";
 
 		if (name.Equals (Constants.CONCAT)) {
 			index++;
 			result = concatString (lexemeList, ref index);
-		} else if (name.Equals (Constants.EQUAL) || name.Equals(Constants.NOTEQUAL)){
-			result = compareParse(lexemeList, ref index);
+		} else if (dec.Contains("Operator") && !dec.Contains("AND") && !dec.Contains("XOR") && !dec.Contains("NOT")&& !dec.Contains("OR")){
+			result = mathOperation (lexemeList, ref index);
 		}
 		else
 			throw new WarningException(WarningMessage.unexpectedLexeme(name));
@@ -350,245 +349,106 @@ public partial class MainWindow: Gtk.Window
 		return result;
 	}
 
-	private String compareParse(List<Lexeme> lexemeList, ref int index){
+	private String mathOperation(List<Lexeme> lexemeList, ref int index){
+		bool ANned = true;
+		char[] delimiter = {' '}; 
 		string result = "";
-		string op = "";
-		string name = "";
+		for (; index < lexemeList.Count; index++) {
+			String name = lexemeList [index].getName ();
+			String desc = lexemeList [index].getDescription ();
 
-		int glPointer = 0;
-		int i = 0;
-
-		bool equals = false;
-		bool isGreater = false;
-		bool isLess = false;
-		bool needAN = false;
-
-		char[] delimiter = {' '};
-
-		foreach(Lexeme l in lexemeList){
-			name = l.getName();
-			string dec = l.getDescription ();
-
-			if (name.Equals (Constants.EQUAL))
-				equals = true;
-			else if (name.Equals (Constants.MAX)) {
-				isGreater = true;
-				glPointer = i;
-			} else if (name.Equals (Constants.MIN)) {
-				isLess = true;
-				glPointer = i;
-			} else if (name.Equals (Constants.AN) || name.Equals ("\"") || dec.Equals ("Variable Identifier") || dec.EndsWith ("constant"))
-				continue;
-			else
-				throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
-			i++;
-		}
-
-		if(equals && isGreater && isLess)
-			throw new Exception(WarningMessage.unexpectedLexeme(Constants.MAX + " and " + Constants.MIN));
-		else if(equals && isGreater)
-			op = ">=";
-		else if(equals && isLess)
-			op = "<=";
-		else if(equals)
-			op = "=";
-		else if(isGreater)
-			op = ">";
-		else if(isLess)
-			op = "<";
-		else
-			op = "!=";
-
-		stackCond.Push(new Value(op, "Operator"));
-		Console.WriteLine (op);
-
-		if(op.Equals(">=") || op.Equals("<=") || op.Equals(">") || op.Equals("<")){
-			index++;
-			if(lexemeList[index].getName().Equals("\"")) index++;
-
-			glPointer++;
-			if(lexemeList[glPointer].getName().Equals("\"")) glPointer++;
-
-			name = lexemeList [index].getName ();
-			Value startValue;
-
-			if(!name.Equals(lexemeList[glPointer].getName()))
-				throw new SyntaxException(WarningMessage.shouldSame(name, lexemeList[glPointer].getName()));
-			else if(lexemeList[index].getDescription().Contains("constant")){
-				string[] type = lexemeList[index].getDescription().Split(delimiter);
-				startValue = new Value(lexemeList[index].getName(), type[0]);
-			} else if(lexemeList[index].getDescription().Equals("Variable Identifier")){
-				if(!table.ContainsKey(name))
-					throw new SyntaxException(WarningMessage.varNoDec(name));
-				startValue = table[name];
-			} else
-				throw new SyntaxException(WarningMessage.unexpectedLexeme(name));
-
-			index = glPointer;
-		}
-
-		for(; index < lexemeList.Count; index++){
-			name = lexemeList [index].getName ();
-			string dec = lexemeList [index].getDescription ();
-
-			if(name.Equals("\""))
-				continue;
-			else if(dec.Contains("constant")){
-				if(needAN)
-					throw new SyntaxException(WarningMessage.unexpectedLexeme(name));
-				string[] type = dec.Split(delimiter);
-				Value val = new Value(name, type[0]);
-				stackCond.Push(val);
-				needAN = true;
-			} else if(dec.Equals("Variable Identifier")){
-				if(needAN)
-					throw new SyntaxException(WarningMessage.unexpectedLexeme(name));
-				else if(!table.ContainsKey(name))
-					throw new SyntaxException(WarningMessage.varNoDec(name));
-
-				Value val = table[name];
-				stackCond.Push(val);
-
-				needAN = true;
-			} else if(name.Equals(Constants.AN)){
-				needAN = false;
-			} else
-				throw new SyntaxException(WarningMessage.unexpectedLexeme(name));
+			if (name == Constants.AN) {
+				if (ANned)
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.AN));
+				else
+					ANned = true;
+			} else if (Constants.NUMBRVAL.Match (name).Success ||
+			          Constants.NUMBARVAL.Match (name).Success ||
+			          Constants.TROOFVAL.Match (name).Success) {
+				if (ANned) {
+					String[] type = desc.Split (delimiter);
+					stack.Push (new Value (name, type [0]));
+					ANned = false;
+				} else
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
+			} else {
+				stack.Push (new Value (name, "Operator"));
+				ANned = true;
+			}
 		}
 
 		result = evaluateCond ();
-		
 		return result;
 	}
 
-	private String evaluateCond (){		
+	private String evaluateCond (){	
 		Value val1 = null;
 		Value val2 = null;
 		Value op = null;
+		String result = "";
 
-		try{
-			val2 = stackCond.Pop();
-			val1 = stackCond.Pop();
-			op = stackCond.Pop();
-		} catch(Exception){
-			throw new SyntaxException (WarningMessage.lackOperands());
+		foreach (Value v in stack) {
+			Console.Write (v.getValue() + " ");
+		}
+		Console.WriteLine ();
+
+		while(stack.Count > 1){
+			try{
+				val2 = stack.Pop();
+				val1 = stack.Pop();
+				op = stack.Pop();
+			} catch(Exception){
+				throw new SyntaxException (WarningMessage.lackOperands() + " resulted in stack underflow.");
+			}
+
+			String str1 = val1.getValue ();
+			String str2 = val2.getValue ();
+			float f1 = float.Parse (str1);
+			float f2 = float.Parse (str2);
+			string type = (val1.getType () == "NUMBAR" || val2.getType () == "NUMBAR") ? "NUMBAR" : "NUMBR";
+
+			if (!op.getType ().Equals ("Operator"))
+				throw new SyntaxException (WarningMessage.unexpectedLexeme (op.getValue ()));
+			else {
+				switch (op.getValue()) {
+				case Constants.ADD:
+					result = Convert.ToString (f1 + f2);
+					break;
+				case Constants.SUB:
+					result = Convert.ToString (f1 - f2);
+					break;
+				case Constants.MUL:
+					result = Convert.ToString (f1 * f2);
+					break;
+				case Constants.DIV:
+					result = Convert.ToString (f1 / f2);
+					break;
+				case Constants.MOD:
+					result = Convert.ToString (f1 % f2);
+					break;
+				case Constants.MAX:
+					result = Convert.ToString ((f1 > f2) ? f1 : f2);
+					break;
+				case Constants.MIN:
+					result = Convert.ToString ((f1 < f2) ? f1 : f2);
+					break;
+				case Constants.EQUAL:
+					result = Convert.ToString ((f1 == f2) ? "WIN" : "FAIL");
+					break;
+				case Constants.NOTEQUAL:
+					result = Convert.ToString ((f1 != f2) ? "WIN" : "FAIL");
+					break;
+				default:
+					throw new Exception ("Something went wrong in evaluate");
+				}
+
+				stack.Push (new Value(result, type));
+			}
 		}
 
-		if (!op.getType ().Equals ("Operator"))
-			throw new SyntaxException (WarningMessage.unexpectedLexeme (op.getValue()));
-
-		switch (op.getValue()) {
-		case "=":
-			if (val1.getType ().Equals (val2.getType ()) || val1.getType ().Equals ("NOOB")) {
-				if (Constants.NUMBARVAL.Match (val1.getValue()).Success) {
-					float f1 = float.Parse (val1.getValue());
-					float f2 = float.Parse (val2.getValue());
-
-					if (f1 == f2)
-						return "WIN";
-					else
-						return "FAIL";
-				} else {
-					if (val1.getValue().Equals (val2.getValue()))
-						return "WIN";
-					else
-						return "FAIL";	
-				}
-			} else
-				return "FAIL";
-		case "!=":
-			if (val1.getType ().Equals (val2.getType ()) || val1.getType ().Equals ("NOOB")) {
-				if (Constants.NUMBARVAL.Match (val1.getValue()).Success) {
-					float f1 = float.Parse (val1.getValue());
-					float f2 = float.Parse (val2.getValue());
-
-					if (f1 != f2)
-						return "WIN";
-					else
-						return "FAIL";
-				} else {
-					if (!val1.getValue().Equals (val2.getValue()))
-						return "WIN";
-					else
-						return "FAIL";	
-				}
-			} else
-				return "WIN";
-		case ">=":
-			if (val1.getType ().Equals (val2.getType ()) || val1.getType ().Equals ("NOOB")) {
-				if (Constants.NUMBARVAL.Match (val1.getValue()).Success) {
-					float f1 = float.Parse (val1.getValue());
-					float f2 = float.Parse (val2.getValue());
-
-					if (f1 >= f2)
-						return "WIN";
-					else
-						return "FAIL";
-				} else {
-					if (val1.getValue().CompareTo (val2.getValue()) >= 0)
-						return "WIN";
-					else
-						return "FAIL";	
-				}
-			} else
-				return "FAIL";
-		case "<=":
-			if (val1.getType ().Equals (val2.getType ()) || val1.getType ().Equals ("NOOB")) {
-				if (Constants.NUMBARVAL.Match (val1.getValue()).Success) {
-					float f1 = float.Parse (val1.getValue ());
-					float f2 = float.Parse (val2.getValue ());
-
-					if (f1 <= f2)
-						return "WIN";
-					else
-						return "FAIL";
-				} else {
-					if (val1.getValue ().CompareTo (val2.getValue ()) <= 0)
-						return "WIN";
-					else
-						return "FAIL";	
-				}
-			} else
-				return "FAIL";
-		case ">":
-			if (val1.getType ().Equals (val2.getType ()) || val1.getType ().Equals ("NOOB")) {
-				if (Constants.NUMBARVAL.Match (val1.getValue()).Success) {
-					float f1 = float.Parse (val1.getValue());
-					float f2 = float.Parse (val2.getValue());
-
-					if (f1 > f2)
-						return "WIN";
-					else
-						return "FAIL";
-				} else {
-					if (val1.getValue().CompareTo (val2.getValue()) > 0)
-						return "WIN";
-					else
-						return "FAIL";	
-				}
-			} else
-				return "WIN";
-		case "<":
-			if (val1.getType ().Equals (val2.getType ()) || val1.getType ().Equals ("NOOB")) {
-				if (Constants.NUMBARVAL.Match (val1.getValue()).Success) {
-					float f1 = float.Parse (val1.getValue());
-					float f2 = float.Parse (val2.getValue());
-
-					if (f1 != f2)
-						return "WIN";
-					else
-						return "FAIL";
-				} else {
-					if (val1.getValue().CompareTo (val2.getValue()) < 0)
-						return "WIN";
-					else
-						return "FAIL";	
-				}
-			} else
-				return "WIN";
-		default:
-			throw new Exception ("Something went wrong in evaluate...");
-		}
+		result = stack.Pop ().getValue ();
+		if(result != "") Console.WriteLine ("Result in evaluate is: " + result);
+		return result;
 	}
 
 	private String concatString(List<Lexeme> lexemeList, ref int index){
