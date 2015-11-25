@@ -26,11 +26,10 @@ namespace test
 			i = -1;
 			foreach (String line in lines) {
 				foreach (char c in line) { //converts it to array of characters
-					//Console.WriteLine(token);
 					if (c == '\t')
 						continue; //ignore if it is a tab
-					else if (c == ' ' && !quotedDouble) { //checks if the character is space and not quoted
-						if (token.EndsWith (" ") || token.Length == 0)
+					else if ((c == ' ' || c == Constants.SOFTBREAKCHAR) && !quotedDouble) { //checks if the character is space and not quoted
+						if ((token.EndsWith (" ") || token.Length == 0) && c == ' ')
 							continue; //ignore if it is a space
 						else if (token.Equals (Constants.ONELINE)) {
 							Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
@@ -54,23 +53,26 @@ namespace test
 							token = "";
 						else
 							checker (lex, c); //else checks the token if it is a keyword or a value
+						if(c == Constants.SOFTBREAKCHAR)
+							lex.Add(new Lexeme(Constants.SOFTBREAK, "Soft-command break"));
 					} else if (c == '\"') { //checks if the char is a double quotes
 						if (isComment)
 							continue;
 						quotedDouble = !quotedDouble; //switches the flags of double quotes
 						if (!quotedDouble) { //if the double quote becomes false
-							Lexeme temp = new Lexeme (str, "YARN constant"); //creates a lexeme
+							Lexeme temp = new Lexeme (str, Constants.STRING + " constant"); //creates a lexeme
 							lex.Add (temp); //adds the lexeme to an array of lexemes
 							lex.Add (new Lexeme ("\"", "YARN Delimiter"));
 							str = ""; //resets the string
-						} else
+						} else{
 							lex.Add (new Lexeme ("\"", "YARN Delimiter"));
-					} else if (quotedDouble)
+						}
+					} else if (quotedDouble){
 						str += c; //append the char to string
-					else
+					} else{
 						token += c;//appends the char to token otherwise
+					}
 				}
-				//Console.WriteLine(token);
 
 				if (quotedDouble) //checks if the string is properly closed
 					throw new SyntaxException (WarningMessage.lackDoubleQuote ());
@@ -101,7 +103,7 @@ namespace test
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (token));
 				}
 				i++;
-				lex.Add(new Lexeme(Constants.EOL, "End of statement."));
+				lex.Add(new Lexeme(Constants.EOL, "Hard-command break"));
 			}
 
 			return lex; //returns the array of lexemes
@@ -112,12 +114,12 @@ namespace test
 			Lexeme temp = new Lexeme();
 			char[] delimiter = { ' ' };
 
-			if (Constants.NUMBRVAL.IsMatch (token))
-				temp = new Lexeme (token, "NUMBR constant");
-			else if (Constants.NUMBARVAL.IsMatch (token))
-				temp = new Lexeme (token, "NUMBAR constant");
-			else if (Constants.TROOFVAL.IsMatch (token))
-				temp = new Lexeme (token, "TROOF constant");
+			if (Constants.INTVAL.IsMatch (token))
+				temp = new Lexeme (token, Constants.INT + " constant");
+			else if (Constants.FLOATVAL.IsMatch (token))
+				temp = new Lexeme (token, Constants.FLOAT + " constant");
+			else if (Constants.BOOLVAL.IsMatch (token))
+				temp = new Lexeme (token, Constants.BOOL + " constant");
 			else if (token.Equals (Constants.STARTPROG))
 				temp = new Lexeme (Constants.STARTPROG, "Starts a program");
 			else if (token.Equals (Constants.ENDPROG))
@@ -157,7 +159,7 @@ namespace test
 					temp = new Lexeme (Constants.MANY_OR, "OR Arity Operator");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -165,7 +167,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -181,7 +183,7 @@ namespace test
 					temp = new Lexeme (Constants.EQUAL, "Operator for equal comparison");
 				else if((!token.EndsWith("OF") || !token.EndsWith("SAEM")) && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -189,7 +191,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -200,7 +202,7 @@ namespace test
 					temp = new Lexeme (Constants.SUB, "Operator that subtracts two numbers");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -208,7 +210,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -219,7 +221,7 @@ namespace test
 					temp = new Lexeme (Constants.OR, "OR Logical Operator");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -227,7 +229,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -238,7 +240,7 @@ namespace test
 					temp = new Lexeme(Constants.VARDEC, "Declares a variable.");
 				else if(!token.EndsWith("HAS") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -246,7 +248,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -257,7 +259,7 @@ namespace test
 					temp = new Lexeme (Constants.MOD, "Operator that gets the modulo of two numbers");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -265,7 +267,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -276,7 +278,7 @@ namespace test
 					temp = new Lexeme (Constants.ELSE, "Else statement");
 				else if(!token.EndsWith("WAI") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -284,7 +286,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -295,7 +297,7 @@ namespace test
 					temp = new Lexeme (Constants.CONDITION, "Ends the condition");
 				else if(!token.EndsWith("RLY?") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -303,7 +305,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -314,7 +316,7 @@ namespace test
 					temp = new Lexeme (Constants.MUL, "Operator that multiplies two numbers");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -322,7 +324,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -333,7 +335,7 @@ namespace test
 					temp = new Lexeme (Constants.DIV, "Operator that divides two numbers");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -341,7 +343,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -354,7 +356,7 @@ namespace test
 					temp = new Lexeme (Constants.MIN, "Gets the smaller number");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -362,7 +364,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -373,7 +375,7 @@ namespace test
 					temp = new Lexeme (Constants.XOR, "Operator for XOR");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -381,7 +383,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -392,7 +394,7 @@ namespace test
 					temp = new Lexeme (Constants.IF, "If statement");
 				else if(!token.EndsWith("RLY") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
-					temp = new Lexeme(str[0], "Variable Identifier");
+					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();
 					token = str [1];
@@ -400,7 +402,7 @@ namespace test
 					token = "";
 				}
 				else if(c == '\n')
-					temp = new Lexeme(token, "Variable Identifier");
+					temp = new Lexeme(token, Constants.VARDESC);
 				else {
 					token += c;
 					return;
@@ -409,7 +411,7 @@ namespace test
 			else if(token.Equals(Constants.ASSIGN))
 				temp = new Lexeme(Constants.ASSIGN, "Assignment operation");
 			else if(Constants.VARIDENT.IsMatch(token))
-				temp = new Lexeme(token, "Variable Identifier");
+				temp = new Lexeme(token, Constants.VARDESC);
 			else if(c!='\n')
 				if(token.Length!=0) token += c;
 

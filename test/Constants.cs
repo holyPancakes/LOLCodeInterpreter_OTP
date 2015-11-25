@@ -55,10 +55,25 @@ namespace test
 
 		public const String IMPLICITVAR = "IT";
 		public const String EOL = @"\n";
+		public const char SOFTBREAKCHAR = ',';
+		public const String SOFTBREAK = ",";
+
+		public const String VARDESC = "Variable Identifier";
+
+		public const String NULL = "NOOB";
+		public const String NOTYPE = "Untyped";
+
+		public const String INT = "NUMBR";
+		public const String FLOAT = "NUMBAR";
+		public const String STRING = "YARN";
+		public const String BOOL = "TROOF";
+
+		public const String TRUE = "WIN";
+		public const String FALSE = "FAIL";
 
 		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		public static Regex NUMBRVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		public static Regex NUMBARVAL = new Regex (numbar, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		public static Regex TROOFVAL = new Regex (troof, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex INTVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex FLOATVAL = new Regex (numbar, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex BOOLVAL = new Regex (troof, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 	}
 }

@@ -13,7 +13,6 @@ public partial class MainWindow: Gtk.Window
 	private List<Lexeme> lexemeList = new List<Lexeme>();
 	private Stack<Value> stack = new Stack<Value> ();
 	private Stack<Value> stackArity = new Stack<Value>();
-	private char[] delimeter = {'\n'};
 
 	private Dictionary<String, Value> table = new Dictionary<String, Value>(); //symbol table
 	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
@@ -80,6 +79,10 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	public void Interpret(){
+		char[] delimeter = {'\n'};
+
+		Console.WriteLine (sourceText.Buffer.Text);
+		Console.WriteLine ("==========");
 		outputField.Buffer.Text = "";
 
 		hasStarted = false;
@@ -94,18 +97,19 @@ public partial class MainWindow: Gtk.Window
 		stackArity.Clear ();
 		lexer.reset ();
 
-		table.Add (Constants.IMPLICITVAR, new Value ("NOOB", "Untyped"));
+		table.Add (Constants.IMPLICITVAR, new Value (Constants.NULL, Constants.NOTYPE));
 
 		string sourceString = sourceText.Buffer.Text;
 		string[] sourceLines = sourceString.Split (delimeter);
 		int i = 0;
+		int junk = 0;
 		try {
 			lineField.Buffer.Text = "Creating Lexemes...";
 			lexemeList = lexer.process (sourceLines, ref i); //creates an array of lexemes
 			i=0;
 			UpdateLexemes(lexemeList);
 			lineField.Buffer.Text = "Running the Lexemes...";
-			parse (ref i); //parses the lexemes
+			parse (ref i,ref junk, Constants.STARTPROG); //parses the lexemes
 		} catch (SyntaxException e) { //if something went wrong, prints the error on screen
 			hasError = true;
 			outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
@@ -119,110 +123,230 @@ public partial class MainWindow: Gtk.Window
 		}
 		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length+1) + ": Program is not closed properly!\n";
 		if(hasEnded) lineField.Buffer.Text = "Done!";
-
-		Console.WriteLine ("----------");
 	}
 
-	public void parse(ref int lineNo)
-	{ //processses the lexemes
-		//Console.WriteLine("\nPARSING:");
+	public void parse(ref int lineNo, ref int i, string fromWhere){
 		bool nextCommand = false;
+		char[] space = { ' ' };
+		string desc;
+		string name;
 
 		if (lexemeList.Count == 0)
 			return;
 
-		for(int i=0; i < lexemeList.Count; i++){
-			Console.WriteLine (lexemeList[i].getName());
-			if (lexemeList [i].getDescription ().Contains ("comment"))
-				continue;
-			else if (lexemeList [i].getName () == Constants.EOL) {
+		for(; i < lexemeList.Count; i++){
+			desc = lexemeList [i].getDescription ();
+			name = lexemeList [i].getName ();
+
+			if (desc.Contains ("comment")) {
+				if (name == Constants.ENDCOMMENT || name == Constants.ONELINE) {
+					nextCommand = true;
+				}
+			} else if (desc.Contains ("break")) {
 				nextCommand = false;
-				lineNo++;
+				if(name == Constants.EOL) lineNo++;
 			} else if (nextCommand) {
 				throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
-			} else if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
+			}else if (name == Constants.STARTPROG) {
 				if(hasStarted) 
 					throw new SyntaxException (WarningMessage.unexpectedLexeme(Constants.STARTPROG));
 				hasStarted = true;
-				nextCommand = true;
 			} else if (!hasStarted)
 				throw new SyntaxException (WarningMessage.noStart());
 			else if(hasEnded)
 				throw new SyntaxException(WarningMessage.alreadyEnd());
 			else{
-				if (lexemeList [i].getName ().Equals (Constants.PRINT)) { //checks if the keyword is VISIBLE
-					printParse(ref i);
-				} else if (lexemeList [i].getName ().Equals (Constants.SCAN)) {
+				if (name == Constants.PRINT) { //checks if the keyword is VISIBLE
+					printParse (ref i);
+					nextCommand = true;
+				} else if (name == Constants.SCAN) {
 					scanParse (ref i);
-				} else if (lexemeList [i].getName ().Equals (Constants.VARDEC)) { //checks if the keyword is I HAS A
-					varDecParse(ref i);
-				} else if (lexemeList [i].getName ().Equals (Constants.ASSIGN)) { //checks if the keyword is R
-					assignParse(ref i);
-				} else if (lexemeList [i].getDescription ().Equals ("Variable Identifier")) { //checks if the keyword is KTHXBYE
+					nextCommand = true;
+				} else if (name == Constants.VARDEC) { //checks if the keyword is I HAS A
+					varDecParse (ref i);
+					nextCommand = true;
+				} else if (name == Constants.ASSIGN) { //checks if the keyword is R
+					assignParse (ref i);
+					nextCommand = true;
+				} else if (desc == Constants.VARDESC) { //checks if the keyword is KTHXBYE
 					if (!table.ContainsKey (lexemeList [i].getName ())) //check if the variable is already declared
 						throw new SyntaxException (WarningMessage.varNoDec (lexemeList [i].getName ()));
 					else if (lexemeList [i + 1].getName () == Constants.ASSIGN)
 						continue;
 					else { 
 						table [Constants.IMPLICITVAR] = table [lexemeList [i].getName ()];
+						nextCommand = true;
 					}
-				} else if (lexemeList [i].getName ().Equals (Constants.ENDPROG)) { //checks if the keyword is KTHXBYE
+				} else if (name == Constants.ENDPROG) { //checks if the keyword is KTHXBYE
 					hasEnded = true;
-				} else if (lexemeList [i].getDescription ().Contains ("Operator")) {
+					nextCommand = true;
+				} else if (desc.Contains ("Operator")) {
 					string value = operatorList (lexemeList, ref i);
 					string type = "";
-					if (Constants.NUMBRVAL.Match (value).Success)
-						type = "NUMBR";
-					else if (Constants.NUMBARVAL.Match (value).Success)
-						type = "NUMBAR";
-					else if (Constants.TROOFVAL.Match (value).Success)
-						type = "TROOF";
+					if (Constants.INTVAL.Match (value).Success)
+						type = Constants.INT;
+					else if (Constants.FLOATVAL.Match (value).Success)
+						type = Constants.FLOAT;
+					else if (Constants.BOOLVAL.Match (value).Success)
+						type = Constants.BOOL;
 					else
-						type = "YARN";
-
-					table[Constants.IMPLICITVAR] = new Value (value, type);
-				} else
+						type = Constants.STRING;
+					table [Constants.IMPLICITVAR] = new Value (value, type);
+					nextCommand = true;
+				} else if (desc.Contains ("constant")) {
+					if (lexemeList [i - 1].getName () != Constants.CASE) {
+						string[] type = desc.Split (space);
+						table [Constants.IMPLICITVAR] = new Value (lexemeList [i].getName (), type [0]);
+					}
+					nextCommand = true;
+				} else if (name == Constants.SWITCH) {
+					switchParse (ref i);
+					nextCommand = true;
+					i--;
+				} else if (name == Constants.CONDITION) {
+					ifParse (ref i);
+					nextCommand = true;
+					i--;
+				} else if (name == Constants.END_IF || 
+					name == Constants.BREAK || 
+					name == Constants.ELSE) {
+					if (fromWhere == Constants.SWITCH &&
+						(name == Constants.END_IF || name == Constants.BREAK)) {
+						return;
+					} else if (fromWhere == Constants.IF && 
+						(name == Constants.END_IF || name == Constants.ELSE)) {
+						return;
+					} else 
+						throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
+				} else if (name == Constants.CASE || name == Constants.DEFAULT) {
+					if(fromWhere == Constants.STARTPROG) 
+						throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
+				}else
 					throw new WarningException(WarningMessage.unexpectedLexeme(lexemeList[i].getName()));
-				nextCommand = true;
 			}
 			UpdateTables();
 		}
-		//Console.WriteLine("========");
+	}
+
+	private void ifParse(ref int i){
+		int elseindex = 0;
+		int ifIndex = 0;
+		int index = 0;
+		string value = table [Constants.IMPLICITVAR].getValue ();
+		string name = lexemeList [i].getName ();
+		string desc = lexemeList [i].getDescription ();
+
+		for (;  name != Constants.END_IF; i++) {
+			desc = lexemeList [i].getDescription ();
+			name = lexemeList [i].getName ();
+			if (!desc.Contains ("constant")) {
+				if (name == Constants.IF) {
+					ifIndex = i + 1;
+				} else if (name == Constants.ELSE) {
+					elseindex = i + 1;
+				} else if (name == Constants.ENDPROG) {
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDPROG));
+				}
+			}
+		}
+		if (ifIndex == 0)
+			throw new SyntaxException (WarningMessage.noIF ());
+		
+		index = (value == Constants.TRUE) ? ifIndex : elseindex;
+
+		if (index == 0)
+			return;
+		
+		int junk = 0;
+		parse (ref junk, ref index, Constants.IF);
+	}
+
+	private void switchParse(ref int i){
+		Dictionary<string,int> cases = new Dictionary<string,int> ();
+		int index = 0;
+		string name = lexemeList [i].getName ();
+		string desc = lexemeList [i].getDescription ();
+		string value = table [Constants.IMPLICITVAR].getValue ();
+
+		for (; name != Constants.END_IF; i++) {
+			name = lexemeList [i].getName ();
+			desc = lexemeList [i].getDescription ();
+			if (!desc.Contains ("constant")) {
+				if (name == Constants.CASE) {
+					if (lexemeList [i + 1].getName ().Equals ("\"")) {
+						cases.Add (lexemeList [i + 2].getName (), i + 4);
+					} else if (lexemeList [i + 1].getDescription ().Contains ("constant")) {
+						cases.Add (lexemeList [i + 1].getName (), i + 2);
+					} else {
+						throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i + 1].getName ()));
+					}
+				} else if (name == Constants.ENDPROG){
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDPROG));
+				} else if (name == Constants.DEFAULT) {
+					cases.Add (Constants.DEFAULT, i + 1);
+				}
+			}
+		}
+
+		foreach (string  g in cases.Keys) {
+			if (value == g) {
+				index = cases [g];
+			}
+		}
+
+		if (index == 0) {
+			if (cases.ContainsKey (Constants.DEFAULT))
+				index = cases [Constants.DEFAULT];
+			else
+				return;
+		}
+
+		int junk = 0;
+		parse (ref junk, ref index, Constants.SWITCH);
 	}
 
 	private void printParse(ref int i){
-		if (lexemeList.Count - i >= 2) { //checks if VISIBLE has arguments
-			Lexeme l = lexemeList [i + 1]; //gets the next lexeme
-			String toWrite;
-			if (l.getName ().Equals ("\"")) { //checks if it is a string constant
+		string name = lexemeList [i+1].getName ();
+		string desc = lexemeList [i+1].getDescription ();
+		string toWrite;
+
+		if (desc.Contains("constant") || desc.Contains("Operator") ||
+			desc == Constants.VARDESC || name == "\"") {
+			if (name == "\"") {
 				Lexeme yarn = lexemeList [i + 2];
-				toWrite = yarn.getName () + "\n"; //prints the string
+				toWrite = yarn.getName () + "\n";
 				i += 3;
-			} else if (l.getDescription ().Equals ("Variable Identifier")) {
-				if (!table.ContainsKey (l.getName ())) //checks if the variable is already declared
-					throw new SyntaxException (WarningMessage.varNoDec (l.getName ()));
-				Value val = table [l.getName ()]; //gets the value of the variable
-				toWrite = val.getValue () + "\n"; //prints the value of the variable
+			} else if (desc.Contains("constant")) {
+				toWrite = name + "\n";
 				i++;
-			} else if (l.getDescription ().Contains ("Operator")) {
+			} else if (desc == Constants.VARDESC) {
+				if (!table.ContainsKey (name))
+					throw new SyntaxException (WarningMessage.varNoDec (name));
+				Value val = table [name];
+				toWrite = val.getValue () + "\n";
+				i++;
+			} else if (desc.Contains ("Operator")) {
 				i++;
 				toWrite = operatorList (lexemeList, ref i);
 				i--;
 			} else
-				throw new SyntaxException (WarningMessage.notPrintable (l.getName ()));
+				throw new SyntaxException (WarningMessage.notPrintable (name));
 			outputField.Buffer.Text += toWrite;
-		} else //else VISIBLE has no arguments
+		} else
 			throw new SyntaxException (WarningMessage.noArguments (Constants.PRINT));
 	}
 
 	private void scanParse(ref int i){
-		if (lexemeList.Count - i >= 2) {
-			if (table.ContainsKey (lexemeList [i + 1].getName ())) {
+		string name = lexemeList [i+1].getName ();
+		string desc = lexemeList [i+1].getDescription ();
+
+		if (desc == Constants.VARDESC) {
+			if (table.ContainsKey (name)) {
 				Dialog inputPrompt = null;
 				ResponseType response = ResponseType.None;
 
 				try {
-					inputPrompt = new Dialog ("GIMMEH", this, 
+					inputPrompt = new Dialog (Constants.SCAN, this, 
 						DialogFlags.DestroyWithParent | DialogFlags.Modal, 
 						"OK", ResponseType.Yes);
 
@@ -235,125 +359,100 @@ public partial class MainWindow: Gtk.Window
 					if (inputPrompt != null) {
 						if (response == ResponseType.Yes) {
 							string input = inputTextView.Buffer.Text;
-							Value val = new Value (input, "YARN");
+							Value val = new Value (input, Constants.STRING);
 							table [lexemeList [i + 1].getName ()] = val; 
 						}
 						inputPrompt.Destroy ();
 					}
 				}
 			} else
-				throw new SyntaxException (WarningMessage.varNoDec (lexemeList [i + 1].getName ()));
+				throw new SyntaxException (WarningMessage.varNoDec (name));
 		} else
 			throw new SyntaxException (WarningMessage.noArguments (Constants.SCAN));
 		i++;
 	}
 
 	private void varDecParse(ref int i){
+		string name = lexemeList [i+1].getName ();
+		string desc = lexemeList [i+1].getDescription ();
 		char[] spaces = { ' ' };
-		if (lexemeList.Count - i == 2) { //checks if I HAS A has arguments
-			Lexeme l = lexemeList [i + 1]; //gets the next lexeme
-			if (l.getDescription ().Equals ("Variable Identifier")) { //checks if it is a variable identifier
-				if (table.ContainsKey (l.getName ())) //checks if the variable is already in the table
-					throw new SyntaxException (WarningMessage.varYesDec (l.getName ()));
-				table.Add (l.getName (), new Value ("NOOB", "Untyped")); //makes the variable NOOB
-			} else
-				throw new SyntaxException (WarningMessage.expectedWord ("variable declaration", Constants.VARDEC));
-			i++; //increments the index
-		} else if (lexemeList.Count > 2) { //checks if the statement also starts with a value
-			if (lexemeList [i + 2].getDescription ().Contains ("comment")) {
-				Lexeme l = lexemeList [i + 1]; //gets the next lexeme
-				if (l.getDescription ().Equals ("Variable Identifier")) { //checks if it is a variable identifier
-					if (table.ContainsKey (l.getName ())) //checks if the variable is already in the table
-						throw new SyntaxException (WarningMessage.varYesDec (l.getName ()));
-					table.Add (l.getName (), new Value ("NOOB", "Untyped")); //makes the variable NOOB
-				} else
-					throw new SyntaxException (WarningMessage.expectedWord ("variable declaration", Constants.VARDEC));
-				i++; //increments the index
-			} else {
-				Lexeme l1 = lexemeList [i + 1]; //gets the next lexeme
-				if (l1.getDescription ().Equals ("Variable Identifier")) { //checks if it is a variable identifier
-					if (table.ContainsKey (l1.getName ())) //checks if the variable is in the table
-						throw new SyntaxException (WarningMessage.varYesDec (l1.getName ()));
-					Lexeme l2 = lexemeList [i + 2]; //gets the next lexeme of next lexeme
-					if (l2.getName ().Equals (Constants.STARTINIT)) { //checks if it is ITZ
-						Lexeme l3 = lexemeList [i + 3]; //gets the argument of ITZ
-						if (l3.getDescription ().EndsWith ("constant")) { //checks if the argument is contstant
-							String[] type = l3.getDescription ().Split (spaces); //gets the datatype of the value
-							table.Add (l1.getName (), new Value (l3.getName (), type [0])); //puts it to table
-						} else if (l3.getName ().Equals ("\"")) { //else ITZ has no arguments
-							Lexeme l4 = lexemeList [i + 4];
-							String[] type = l4.getDescription ().Split (spaces); //gets the datatype of the value
-							table.Add (l1.getName (), new Value (l4.getName (), type [0])); //puts it to table
-							i += 2;
-						} else if (table.ContainsKey (l3.getName ())) { //checks if the argument is a variable and it is initialized
-							table.Add (l1.getName (), table [l3.getName ()]); //copies the value and puts it to the table
-						} else if (l3.getDescription ().Contains ("Operator")) {
-							i += 3;
-							string val = operatorList (lexemeList, ref i);
-							string type = "";
-							if (Constants.NUMBRVAL.Match (val).Success)
-								type = "NUMBR";
-							else if (Constants.NUMBARVAL.Match (val).Success)
-								type = "NUMBAR";
-							else if (Constants.TROOFVAL.Match (val).Success)
-								type = "TROOF";
-							else
-								type = "YARN";
 
-							table.Add (l1.getName (), new Value (val, type));
-						} else
-							throw new SyntaxException (WarningMessage.expectedWord ("constant or variable", Constants.STARTINIT));
+		if (lexemeList[i+2].getName() != Constants.STARTINIT) {
+			if (desc == Constants.VARDESC) {
+				if (table.ContainsKey (name))
+					throw new SyntaxException (WarningMessage.varYesDec (name));
+				table.Add (name, new Value (Constants.NULL, Constants.NOTYPE));
+			} else
+				throw new SyntaxException (WarningMessage.expectedWord (Constants.VARDESC, Constants.VARDEC));
+			i++;
+		} else {
+			if (desc == Constants.VARDESC) {
+				if (table.ContainsKey (name))
+					throw new SyntaxException (WarningMessage.varYesDec (name));
+				Lexeme l2 = lexemeList [i + 2];
+				if (l2.getName ().Equals (Constants.STARTINIT)) {
+					Lexeme l3 = lexemeList [i + 3];
+					if (l3.getDescription ().EndsWith ("constant")) {
+						String[] type = l3.getDescription ().Split (spaces);
+						table.Add (name, new Value (l3.getName (), type [0]));
+					} else if (l3.getName ().Equals ("\"")) {
+						Lexeme l4 = lexemeList [i + 4];
+						String[] type = l4.getDescription ().Split (spaces);
+						table.Add (name, new Value (l4.getName (), type [0]));
+						i += 2;
+					} else if (table.ContainsKey (l3.getName ())) {
+						table.Add (name, table [l3.getName ()]);
+					} else if (l3.getDescription ().Contains ("Operator")) {
+						i += 3;
+						string val = operatorList (lexemeList, ref i);
+						string type = returnType(val);
+
+						table.Add (name, new Value (val, type));
 					} else
-						throw new SyntaxException (WarningMessage.expectedWord (Constants.STARTINIT, "variable declaration"));
+						throw new SyntaxException (WarningMessage.expectedWord ("constant or variable", Constants.STARTINIT));
 				} else
-					throw new SyntaxException (WarningMessage.expectedWord ("variable declaration", Constants.STARTINIT));
-			}
+					throw new SyntaxException (WarningMessage.expectedWord (Constants.STARTINIT, "variable declaration"));
+			} else
+				throw new SyntaxException (WarningMessage.expectedWord ("variable declaration", Constants.STARTINIT));
 			i += 3;
-		} else
-			throw new SyntaxException (WarningMessage.noArguments (Constants.VARDEC));
+		}
 	}
 
 	private void assignParse(ref int i){
-		Lexeme var = lexemeList [i - 1]; //gets the left and right lexemes of R
-		Lexeme value = lexemeList [i + 1];
+		string varName = lexemeList [i-1].getName ();
+		string varDesc = lexemeList [i-1].getDescription ();
+		string valueName = lexemeList [i+1].getName ();
+		string valueDesc = lexemeList [i+1].getDescription ();
 		char[] spaces = { ' ' };
 
-		if (var.getDescription ().Equals ("Variable Identifier")) { //checks if the left side is a variable
-			if (value.getDescription ().EndsWith ("constant")) { //checks if the right side is a constant
-				String[] type = value.getDescription ().Split (spaces); //gets the dataype
-				Value old = table [var.getName ()]; //gets the old datatype of the variable
+		if (varDesc == Constants.VARDESC) {
+			if (valueDesc.EndsWith ("constant")) {
+				String[] type = valueDesc.Split (spaces);
+				Value old = table [varName];
 
-				table [var.getName ()] = new Value (value.getName (), type [0]); //puts new value to table
-			} else if(value.getName().Equals("\"")){
+				table [varName] = new Value (valueName, type [0]);
+			} else if(valueName == "\""){
 				Lexeme yarn = lexemeList [i + 2];
-				String[] type = yarn.getDescription ().Split (spaces); //gets the dataype
-				Value old = table [var.getName ()]; //gets the old datatype of the variable
+				String[] type = yarn.getDescription ().Split (spaces);
+				Value old = table [varName];
 
-				table [var.getName ()] = new Value (yarn.getName (), type [0]); //puts new value to table
+				table [varName] = new Value (yarn.getName (), type [0]);
 				i+=2;
-			}else if (value.getDescription ().Equals ("Variable Identifier")) { //checks if the right side is a variable
-				if (!table.ContainsKey (value.getName ())) //check if the variable is already declared
-					throw new SyntaxException (WarningMessage.varNoDec (value.getName ()));
+			}else if (valueDesc == Constants.VARDESC) {
+				if (!table.ContainsKey (valueName))
+					throw new SyntaxException (WarningMessage.varNoDec (valueName));
 
-				table[var.getName ()] = table [value.getName ()]; //changes the value of the variable
-			} else if (value.getDescription ().Contains ("Operator")) {
+				table[varName] = table [valueName];
+			} else if (valueDesc.Contains ("Operator")) {
 				i++;
 				string val = operatorList (lexemeList, ref i);
-				string type = "";
-				if (Constants.NUMBRVAL.Match (val).Success)
-					type = "NUMBR";
-				else if (Constants.NUMBARVAL.Match (val).Success)
-					type = "NUMBAR";
-				else if (Constants.TROOFVAL.Match (val).Success)
-					type = "TROOF";
-				else
-					type = "YARN";
+				string type = returnType (val);
 
-				table [var.getName ()] = new Value (val, type);
-			} else //else the right side is neither a variable or a constant
+				table [varName] = new Value (val, type);
+			} else
 				throw new SyntaxException (WarningMessage.RRightSide ());
 
-		} else //else the left side is not a variable
+		} else
 			throw new SyntaxException (WarningMessage.RLefttSide ());
 
 		i++;
@@ -376,7 +475,8 @@ public partial class MainWindow: Gtk.Window
 			result = arityOperation(lexemeList, ref index);
 		} else
 			throw new WarningException(WarningMessage.unexpectedLexeme(name));
-		
+
+		index--;
 		return result;
 	}
 
@@ -384,7 +484,7 @@ public partial class MainWindow: Gtk.Window
 		bool ANned = true;
 		char[] delimiter = {' '}; 
 		string result = "";
-		for (; lexemeList[index].getName() != Constants.EOL; index++) {
+		for (; !lexemeList [index].getDescription ().Contains ("break"); index++) {
 			String name = lexemeList [index].getName ();
 			String desc = lexemeList [index].getDescription ();
 
@@ -395,16 +495,16 @@ public partial class MainWindow: Gtk.Window
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.AN));
 				else
 					ANned = true;
-			} else if (Constants.NUMBRVAL.Match (name).Success ||
-			           Constants.NUMBARVAL.Match (name).Success ||
-			           Constants.TROOFVAL.Match (name).Success) {
+			} else if (Constants.INTVAL.Match (name).Success ||
+			           Constants.FLOATVAL.Match (name).Success ||
+			           Constants.BOOLVAL.Match (name).Success) {
 				if (ANned) {
 					String[] type = desc.Split (delimiter);
 					stack.Push (new Value (name, type [0]));
 					ANned = false;
 				} else
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
-			} else if (desc == "Variable Identifier"){
+			} else if (desc == Constants.VARDESC) {
 				if (table.ContainsKey (name)) {
 					Value val = table [name];
 					stack.Push (val);
@@ -418,7 +518,6 @@ public partial class MainWindow: Gtk.Window
 		}
 
 		result = evaluateCond ();
-		Console.WriteLine ("Result in math op: " + result);
 		return result;
 	}
 
@@ -426,7 +525,7 @@ public partial class MainWindow: Gtk.Window
 		bool ANned = true;
 		char[] delimiter = {' '}; 
 		string result = "";
-		for (; lexemeList[index].getName() != Constants.EOL; index++) {
+		for (; !lexemeList [index].getDescription ().Contains ("break"); index++) {
 			String name = lexemeList [index].getName ();
 			String desc = lexemeList [index].getDescription ();
 
@@ -437,16 +536,16 @@ public partial class MainWindow: Gtk.Window
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.AN));
 				else
 					ANned = true;
-			} else if (Constants.NUMBRVAL.Match (name).Success ||
-				Constants.NUMBARVAL.Match (name).Success ||
-				Constants.TROOFVAL.Match (name).Success) {
+			} else if (Constants.INTVAL.Match (name).Success ||
+				Constants.FLOATVAL.Match (name).Success ||
+				Constants.BOOLVAL.Match (name).Success) {
 				if (ANned) {
 					String[] type = desc.Split (delimiter);
 					stackArity.Push (new Value (name, type [0]));
 					ANned = false;
 				} else
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
-			} else if (desc == "Variable Identifier"){
+			} else if (desc == Constants.VARDESC){
 				if (table.ContainsKey (name)) {
 					Value val = table [name];
 					stackArity.Push (val);
@@ -471,20 +570,7 @@ public partial class MainWindow: Gtk.Window
 		bool start = true;
 
 		while (stackArity.Count > 1) {
-			Console.Write ("Stack Arity Stack: ");
-			foreach (Value v in stackArity) {
-				Console.Write (v.getValue () + " ");
-			}
-			Console.WriteLine ();
-
-			Console.Write ("Values List: ");
-			foreach (Value v in values) {
-				Console.Write (v.getValue () + " ");
-			}
-			Console.WriteLine ();
-
 			popped = stackArity.Pop();
-			Console.WriteLine ("Popped: " + popped.getValue ());
 
 			if (popped.getValue () == Constants.MKAY) {
 				if (!start)
@@ -495,8 +581,8 @@ public partial class MainWindow: Gtk.Window
 				}
 			} else if (stackArity.Peek ().getValue () == Constants.NOT) {
 				stackArity.Pop ();
-				values.Add(new Value((popped.getValue() == "WIN")? "FAIL": "WIN", "TROOF"));
-			} else if (popped.getType () != "TROOF") {
+				values.Add(new Value((popped.getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.FALSE));
+			} else if (popped.getType () != Constants.BOOL) {
 				temp.Push (popped);
 				while ((popped = stackArity.Pop ()).getType () != "Operator") {
 					temp.Push (popped);
@@ -509,94 +595,73 @@ public partial class MainWindow: Gtk.Window
 				result = evaluateCond ();
 				if (stackArity.Peek ().getValue () == Constants.NOT){
 					stackArity.Pop ();
-					result = (result == "WIN") ? "FAIL" : "WIN";
+					result = (result == Constants.TRUE) ? Constants.FALSE : Constants.TRUE;
 				}
-				values.Add (new Value (result, "TROOF"));
+				values.Add (new Value (result, Constants.BOOL));
 			} else {
 				values.Add (popped);
 			}
 
 			start = false;
 		}
-
-		Console.Write ("Values List: ");
-		foreach (Value v in values) {
-			Console.Write (v.getValue () + " ");
-		}
-		Console.WriteLine ();
 		
 		popped = stackArity.Pop ();
 		if (popped.getValue () == Constants.MANY_AND) {
 			foreach (Value v in values) {
-				if (v.getValue () == "FAIL") {
-					result = "FAIL";
+				if (v.getValue () == Constants.FALSE) {
+					result = Constants.FALSE;
 					break;
 				}
 			}
-			if (result != "FAIL")
-				result = "WIN";
+			if (result != Constants.FALSE)
+				result = Constants.TRUE;
 		} else if (popped.getValue () == Constants.MANY_OR) {
 			foreach (Value v in values) {
-				if (v.getValue () == "WIN") {
-					result = "WIN";
+				if (v.getValue () == Constants.TRUE) {
+					result = Constants.TRUE;
 				}
 			}
-			if (result != "WIN")
-				result = "FAIL";
+			if (result != Constants.TRUE)
+				result = Constants.FALSE;
 		} else
 			throw new SyntaxException(WarningMessage.unexpectedLexeme(popped.getValue()));
-		Console.WriteLine ("Result in Arity Evaluation: " + result);
 		return result;
 	}
 
 	private String evaluateCond (){
-		Value val1 = new Value("NOOB", "Untyped");
-		Value val2 = new Value("NOOB", "Untyped");
+		Value val1 = new Value(Constants.NULL, Constants.NOTYPE);
+		Value val2 = new Value(Constants.NULL, Constants.NOTYPE);
 		Value op = null;
 		Value temp = null;
 		String result = "";
 		bool overPop = false;
 
 		while(stack.Count > 1){
-			Console.Write ("Stack stack: ");
-			foreach (Value v in stack) {
-				Console.Write (v.getValue() + " ");
-			}
-			Console.WriteLine ();
 
 			try{
 				val2 = stack.Pop();
 				if(stack.Count > 1){
 					if(stack.Peek().getValue() == Constants.NOT){
-						if(val2.getType() != "TROOF")
+						if(val2.getType() != Constants.BOOL)
 							throw new SyntaxException(WarningMessage.unexpectedLexeme(val2.getValue()));
 						else{
 							stack.Pop();
-							foreach (Value v in stack) {
-								Console.Write (v.getValue() + " ");
-							}
-							Console.WriteLine ();
-							val2 = new Value((val2.getValue() == "WIN")? "FAIL": "WIN", "TROOF");
+							val2 = new Value((val2.getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.BOOL);
 						}
 					}
 				}
 				if(stack.Count > 1){
 					val1 = stack.Pop();
 					if(stack.Peek().getValue() == Constants.NOT){
-						if(val2.getType() != "TROOF")
+						if(val2.getType() != Constants.BOOL)
 							throw new SyntaxException(WarningMessage.unexpectedLexeme(val2.getValue()));
 						else{
 							stack.Pop();
-							foreach (Value v in stack) {
-								Console.Write (v.getValue() + " ");
-							}
-							Console.WriteLine ();
-							val2 = new Value((val2.getValue() == "WIN")? "FAIL": "WIN", "TROOF");
+							val2 = new Value((val2.getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.BOOL);
 						}
 					}
 				}
 				op = stack.Pop();
-				Console.WriteLine ("Types: " + val1.getType() + " " + val2.getType() + " " + op.getType());
 				if(op.getType() != "Operator"){
 					overPop = true;
 
@@ -604,7 +669,6 @@ public partial class MainWindow: Gtk.Window
 					val2 = val1;
 					val1 = op;
 					op = stack.Pop();
-					Console.WriteLine ("Types: " + val1.getType() + " " + val2.getType() + " " + op.getType());
 				}
 			} catch(Exception){
 				throw new SyntaxException (WarningMessage.lackOperands() + " Resulted in stack underflow.");
@@ -621,30 +685,30 @@ public partial class MainWindow: Gtk.Window
 			bool b1 = false;
 			bool b2 = false;
 
-			if (type1 == "TROOF" || type2 == "TROOF") {
-				if (type1 == "TROOF") {
-					b1 = (str1 == "WIN") ? true : false;
-					if (type2 == "TROOF")
-						b2 = (str2 == "WIN") ? true : false;
+			if (type1 == Constants.BOOL || type2 == Constants.BOOL) {
+				if (type1 == Constants.BOOL) {
+					b1 = (str1 == Constants.TRUE) ? true : false;
+					if (type2 == Constants.BOOL)
+						b2 = (str2 == Constants.TRUE) ? true : false;
 					else
 						f2 = float.Parse (str2);
-					type = "TROOF";
-				} else if (type2 == "TROOF") {
-					b2 = (str2 == "WIN") ? true : false;
-					if(type1 != "Untyped") f1 = float.Parse (str1);
-					type = "TROOF";
+					type = Constants.BOOL;
+				} else if (type2 == Constants.BOOL) {
+					b2 = (str2 == Constants.TRUE) ? true : false;
+					if(type1 != Constants.NOTYPE) f1 = float.Parse (str1);
+					type = Constants.BOOL;
 				}else {
 					f1 = float.Parse (str1);
 					f2 = float.Parse (str2);
-					type = (val1.getType () == "NUMBAR" || val2.getType () == "NUMBAR") ? "NUMBAR" : "NUMBR";
+					type = (val1.getType () == Constants.FLOAT || val2.getType () == Constants.FLOAT) ? Constants.FLOAT : Constants.INT;
 				}
 			} else {
 				if (float.TryParse (str1, out f1)) {
 					if (float.TryParse (str2, out f2)) {
 						f1 = float.Parse (str1);
 						f2 = float.Parse (str2);
-						type = (val1.getType () == "NUMBAR" || val2.getType () == "NUMBAR" ||
-						(val1.getType () == "YARN" && val2.getType () == "YARN")) ? "NUMBAR" : "NUMBR";
+						type = (val1.getType () == Constants.FLOAT || val2.getType () == Constants.FLOAT ||
+							(val1.getType () == Constants.STRING && val2.getType () == Constants.STRING)) ? Constants.FLOAT : Constants.INT;
 					}else
 						throw new SyntaxException(WarningMessage.cannotConvert(str2));
 				} else
@@ -657,80 +721,80 @@ public partial class MainWindow: Gtk.Window
 			else {
 				switch (op.getValue()) {
 				case Constants.ADD:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString (f1 + f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.ADD, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.ADD, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.SUB:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString (f1 - f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.SUB, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.SUB, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.MUL:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString (f1 * f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.MUL, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.MUL, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.DIV:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString (f1 / f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.DIV, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.DIV, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.MOD:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString (f1 % f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.MOD, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.MOD, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.MAX:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString ((f1 > f2) ? f1 : f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.MAX, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.MAX, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.MIN:
-					if (type != "TROOF")
+					if (type != Constants.BOOL)
 						result = Convert.ToString ((f1 < f2) ? f1 : f2);
 					else
-						throw new SyntaxException (WarningMessage.canAccept (Constants.MIN, "NUMBR OR NUMBAR"));
+						throw new SyntaxException (WarningMessage.canAccept (Constants.MIN, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.EQUAL:
-					if (type1 == type2 && type1 != "Untyped")
-						result = (f1 == f2) ? "WIN" : "FAIL";
+					if (type1 == type2 && type1 != Constants.NOTYPE)
+						result = (f1 == f2) ? Constants.TRUE : Constants.FALSE;
 					else
-						result = "FAIL";
-					type = "TROOF";
+						result = Constants.FALSE;
+					type = Constants.BOOL;
 					break;
 				case Constants.NOTEQUAL:
-					if (type1 == type2 && type1 != "Untyped")
-						result = (f1 != f2) ? "WIN" : "FAIL";
+					if (type1 == type2 && type1 != Constants.NOTYPE)
+						result = (f1 != f2) ? Constants.TRUE : Constants.FALSE;
 					else
-						result = "WIN";
-					type = "TROOF";
+						result = Constants.TRUE;
+					type = Constants.BOOL;
 					break;
 				case Constants.AND:
-					if (type1 != "TROOF" || type2 != "TROOF")
-						throw new SyntaxException (WarningMessage.canAccept(Constants.AND, "TROOF"));
-					else result = (b1 && b2) ? "WIN" : "FAIL";
+					if (type1 != Constants.BOOL || type2 != Constants.BOOL)
+						throw new SyntaxException (WarningMessage.canAccept(Constants.AND, Constants.BOOL));
+					else result = (b1 && b2) ? Constants.TRUE : Constants.FALSE;
 					break;
 				case Constants.OR:
-					if (type1 != "TROOF" || type2 != "TROOF")
-						throw new SyntaxException (WarningMessage.canAccept(Constants.OR, "TROOF"));
-					else result = (b1 || b2) ? "WIN" : "FAIL";
+					if (type1 != Constants.BOOL || type2 != Constants.BOOL)
+						throw new SyntaxException (WarningMessage.canAccept(Constants.OR, Constants.BOOL));
+					else result = (b1 || b2) ? Constants.TRUE : Constants.FALSE;
 					break;
 				case Constants.XOR:
-					if (type1 != "TROOF" || type2 != "TROOF")
-						throw new SyntaxException (WarningMessage.canAccept(Constants.XOR, "TROOF"));
-					else result = (b1 ^ b2) ? "WIN" : "FAIL";
+					if (type1 != Constants.BOOL || type2 != Constants.BOOL)
+						throw new SyntaxException (WarningMessage.canAccept(Constants.XOR, Constants.BOOL));
+					else result = (b1 ^ b2) ? Constants.TRUE : Constants.FALSE;
 					break;
 				case Constants.NOT:
-					if (type2 != "TROOF")
-						throw new SyntaxException (WarningMessage.canAccept(Constants.NOT, "TROOF"));
-					else result = (!b2) ? "WIN" : "FAIL";
+					if (type2 != Constants.BOOL)
+						throw new SyntaxException (WarningMessage.canAccept(Constants.NOT, Constants.BOOL));
+					else result = (!b2) ? Constants.TRUE : Constants.FALSE;
 					break;
 				default:
 					throw new Exception ("Something went wrong in evaluate");
@@ -743,10 +807,10 @@ public partial class MainWindow: Gtk.Window
 
 				try{
 					if (stack.Peek ().getValue () == Constants.NOT) {
-						if (type != "TROOF")
+						if (type != Constants.BOOL)
 							throw new SyntaxException (WarningMessage.unexpectedLexeme (result));
 						else
-							result = (result == "WIN") ? "FAIL" : "WIN";
+							result = (result != Constants.TRUE) ? Constants.TRUE : Constants.FALSE;
 					}
 				} 
 				catch(Exception  e){
@@ -759,7 +823,6 @@ public partial class MainWindow: Gtk.Window
 		}
 
 		result = stack.Pop ().getValue ();
-		if(result != "") Console.WriteLine ("Result in evaluate is: " + result);
 		return result;
 	}
 
@@ -785,10 +848,10 @@ public partial class MainWindow: Gtk.Window
 				result += name;
 				needNext = true;
 			}
-			else if (dec.EndsWith ("Variable Identifier")) {
+			else if (dec.EndsWith (Constants.VARDESC)) {
 				if (table.ContainsKey (name)) {
 					string varname = name;
-					if (table [varname].getValue ().Equals ("NOOB"))
+					if (table [varname].getValue ().Equals (Constants.NULL))
 						continue;
 					else
 						result += table [varname].getValue ();
@@ -817,6 +880,21 @@ public partial class MainWindow: Gtk.Window
 			Value val = table [key];
 			symbolTableListStore.AppendValues (key, val.getValue (), val.getType ());
 		}
+	}
+
+	public String returnType(String val){
+		String type = "";
+
+		if (Constants.INTVAL.Match (val).Success)
+			type = Constants.INT;
+		else if (Constants.FLOATVAL.Match (val).Success)
+			type = Constants.FLOAT;
+		else if (Constants.BOOLVAL.Match (val).Success)
+			type = Constants.BOOL;
+		else
+			type = Constants.STRING;
+
+		return type;
 	}
 
 	protected void OnDeleteEvent (object sender, DeleteEventArgs a){

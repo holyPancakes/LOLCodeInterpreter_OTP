@@ -79,6 +79,10 @@ namespace test
 		public static String noMKAY(){
 			return Constants.MKAY + " not found in arity!";
 		}
+
+		public static String noIF(){
+			return "Started Condition without " + Constants.IF;
+		}
 	}
 }
 
