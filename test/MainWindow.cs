@@ -132,17 +132,19 @@ public partial class MainWindow: Gtk.Window
 			return;
 
 		for(int i=0; i < lexemeList.Count; i++){
+			Console.WriteLine (lexemeList[i].getName());
 			if (lexemeList [i].getDescription ().Contains ("comment"))
 				continue;
-			else if (lexemeList [i].getName () == Constants.EOL){
-				nextCommand = true;
+			else if (lexemeList [i].getName () == Constants.EOL) {
+				nextCommand = false;
 				lineNo++;
-			} else if (nextCommand)
-				throw new SyntaxException (WarningMessage.unexpectedLexeme(lexemeList [i].getName ()));
-			else if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
+			} else if (nextCommand) {
+				throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
+			} else if (lexemeList [i].getName ().Equals (Constants.STARTPROG)) {
 				if(hasStarted) 
 					throw new SyntaxException (WarningMessage.unexpectedLexeme(Constants.STARTPROG));
 				hasStarted = true;
+				nextCommand = true;
 			} else if (!hasStarted)
 				throw new SyntaxException (WarningMessage.noStart());
 			else if(hasEnded)
@@ -163,11 +165,9 @@ public partial class MainWindow: Gtk.Window
 						continue;
 					else { 
 						table [Constants.IMPLICITVAR] = table [lexemeList [i].getName ()];
-						nextCommand = true;
 					}
 				} else if (lexemeList [i].getName ().Equals (Constants.ENDPROG)) { //checks if the keyword is KTHXBYE
 					hasEnded = true;
-					nextCommand = true;
 				} else if (lexemeList [i].getDescription ().Contains ("Operator")) {
 					string value = operatorList (lexemeList, ref i);
 					string type = "";
@@ -181,11 +181,10 @@ public partial class MainWindow: Gtk.Window
 						type = "YARN";
 
 					table[Constants.IMPLICITVAR] = new Value (value, type);
-					nextCommand = true;
 				} else
 					throw new WarningException(WarningMessage.unexpectedLexeme(lexemeList[i].getName()));
+				nextCommand = true;
 			}
-			nextCommand = !nextCommand;
 			UpdateTables();
 		}
 		//Console.WriteLine("========");
@@ -208,6 +207,7 @@ public partial class MainWindow: Gtk.Window
 			} else if (l.getDescription ().Contains ("Operator")) {
 				i++;
 				toWrite = operatorList (lexemeList, ref i);
+				i--;
 			} else
 				throw new SyntaxException (WarningMessage.notPrintable (l.getName ()));
 			outputField.Buffer.Text += toWrite;
@@ -418,6 +418,7 @@ public partial class MainWindow: Gtk.Window
 		}
 
 		result = evaluateCond ();
+		Console.WriteLine ("Result in math op: " + result);
 		return result;
 	}
 
