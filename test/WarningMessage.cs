@@ -67,6 +67,18 @@ namespace test
 		public static String lackOperands(){
 			return "Lack of operands!";
 		}
+
+		public static String canAccept(String keyword, String type){
+			return keyword + "can only accept " + type + " datatype!";
+		}
+
+		public static String cannotConvert(String name){
+			return "Cannot convert " + name + " to NUMBR or NUMBAR!";
+		}
+
+		public static String noMKAY(){
+			return Constants.MKAY + " not found in arity!";
+		}
 	}
 }
 

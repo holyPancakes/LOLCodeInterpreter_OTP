@@ -18,82 +18,90 @@ namespace test
 			isComment = false;
 		}
 
-		public List<Lexeme> process(String line)
+		public List<Lexeme> process(String[] lines, ref int i)
 		{ //processes a string
 			
 			List<Lexeme> lex = new List<Lexeme>();
 
-			foreach(char c in line) { //converts it to array of characters
-				//Console.WriteLine(token);
-				if(c == '\t')
-					continue; //ignore if it is a tab
-				else if(c == ' ' && !quotedDouble) { //checks if the character is space and not quoted
-					if (token.EndsWith (" ") || token.Length == 0)
-						continue; //ignore if it is a space
-					else if (token.Equals (Constants.ONELINE)) {
-						Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
-						lex.Add(temp);
-						token = "";
-						return lex;
-					} else if (token.Equals (Constants.MULTILINE)) {
-						Lexeme temp = new Lexeme(Constants.MULTILINE, "Multiline comment");
-						lex.Add(temp);
-						isComment = true;
-						token = "";
-					} else if (token.Equals (Constants.ENDCOMMENT)) {
-						if (isComment) {
-							Lexeme temp = new Lexeme (Constants.ENDCOMMENT, "Ends the comment");
+			i = -1;
+			foreach (String line in lines) {
+				foreach (char c in line) { //converts it to array of characters
+					//Console.WriteLine(token);
+					if (c == '\t')
+						continue; //ignore if it is a tab
+					else if (c == ' ' && !quotedDouble) { //checks if the character is space and not quoted
+						if (token.EndsWith (" ") || token.Length == 0)
+							continue; //ignore if it is a space
+						else if (token.Equals (Constants.ONELINE)) {
+							Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
 							lex.Add (temp);
-							isComment = false;
 							token = "";
+							return lex;
+						} else if (token.Equals (Constants.MULTILINE)) {
+							Lexeme temp = new Lexeme (Constants.MULTILINE, "Multiline comment");
+							lex.Add (temp);
+							isComment = true;
+							token = "";
+						} else if (token.Equals (Constants.ENDCOMMENT)) {
+							if (isComment) {
+								Lexeme temp = new Lexeme (Constants.ENDCOMMENT, "Ends the comment");
+								lex.Add (temp);
+								isComment = false;
+								token = "";
+							} else
+								throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
+						} else if (isComment)
+							token = "";
+						else
+							checker (lex, c); //else checks the token if it is a keyword or a value
+					} else if (c == '\"') { //checks if the char is a double quotes
+						if (isComment)
+							continue;
+						quotedDouble = !quotedDouble; //switches the flags of double quotes
+						if (!quotedDouble) { //if the double quote becomes false
+							Lexeme temp = new Lexeme (str, "YARN constant"); //creates a lexeme
+							lex.Add (temp); //adds the lexeme to an array of lexemes
+							lex.Add (new Lexeme ("\"", "YARN Delimiter"));
+							str = ""; //resets the string
 						} else
-							throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
-					}else if (isComment) token = "";
-					else checker(lex, c); //else checks the token if it is a keyword or a value
-				} else if(c == '\"') { //checks if the char is a double quotes
-					if(isComment) continue;
-					quotedDouble = !quotedDouble; //switches the flags of double quotes
-					if (!quotedDouble) { //if the double quote becomes false
-						Lexeme temp = new Lexeme (str, "YARN constant"); //creates a lexeme
-						lex.Add (temp); //adds the lexeme to an array of lexemes
-						lex.Add (new Lexeme ("\"", "YARN Delimiter"));
-						str = ""; //resets the string
-					} else
-						lex.Add(new Lexeme("\"", "YARN Delimiter"));
+							lex.Add (new Lexeme ("\"", "YARN Delimiter"));
+					} else if (quotedDouble)
+						str += c; //append the char to string
+					else
+						token += c;//appends the char to token otherwise
 				}
-				else if(quotedDouble)
-					str += c; //append the char to string
-				else
-					token+=c;//appends the char to token otherwise
-			}
-			//Console.WriteLine(token);
+				//Console.WriteLine(token);
 
-			if(quotedDouble) //checks if the string is properly closed
-				throw new SyntaxException (WarningMessage.lackDoubleQuote());
-			if (token.Equals (Constants.ONELINE)) {
-				Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
-				lex.Add(temp);
-				token = "";
-				return lex;
-			} else if (token.Equals (Constants.MULTILINE)) {
-				Lexeme temp = new Lexeme(Constants.MULTILINE, "Multiline comment");
-				lex.Add(temp);
-				isComment = true;
-				token = "";
-			} else if (token.Equals (Constants.ENDCOMMENT)) {
-				if (isComment) {
-					Lexeme temp = new Lexeme (Constants.ENDCOMMENT, "Ends the comment");
+				if (quotedDouble) //checks if the string is properly closed
+					throw new SyntaxException (WarningMessage.lackDoubleQuote ());
+				if (token.Equals (Constants.ONELINE)) {
+					Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
 					lex.Add (temp);
-					isComment = false;
 					token = "";
-				} else
-					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
-			}else if (isComment) token = "";
-			else checker(lex, '\n'); //checks the token of it is not yet empty
+					return lex;
+				} else if (token.Equals (Constants.MULTILINE)) {
+					Lexeme temp = new Lexeme (Constants.MULTILINE, "Multiline comment");
+					lex.Add (temp);
+					isComment = true;
+					token = "";
+				} else if (token.Equals (Constants.ENDCOMMENT)) {
+					if (isComment) {
+						Lexeme temp = new Lexeme (Constants.ENDCOMMENT, "Ends the comment");
+						lex.Add (temp);
+						isComment = false;
+						token = "";
+					} else
+						throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
+				} else if (isComment)
+					token = "";
+				else
+					checker (lex, '\n'); //checks the token of it is not yet empty
 
-			if(token.Length!=0)
-			{ //checks if the token is not a keyword and found dangling in the code
-				throw new SyntaxException(WarningMessage.unexpectedLexeme (token));
+				if (token.Length != 0) { //checks if the token is not a keyword and found dangling in the code
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (token));
+				}
+				i++;
+				lex.Add(new Lexeme(Constants.EOL, "End of statement."));
 			}
 
 			return lex; //returns the array of lexemes

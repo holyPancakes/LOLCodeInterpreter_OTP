@@ -54,6 +54,7 @@ namespace test
 		public const string ENDCOMMENT = "TLDR";//
 
 		public const String IMPLICITVAR = "IT";
+		public const String EOL = @"\n";
 
 		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		public static Regex NUMBRVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -61,4 +62,3 @@ namespace test
 		public static Regex TROOFVAL = new Regex (troof, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 	}
 }
-
