@@ -129,6 +129,8 @@
     <property name="HeightRequest">600</property>
     <property name="Title" translatable="yes">MainWindow</property>
     <property name="WindowPosition">CenterAlways</property>
+    <property name="Resizable">False</property>
+    <property name="AllowGrow">False</property>
     <signal name="DeleteEvent" handler="OnDeleteEvent" />
     <child>
       <widget class="Gtk.VBox" id="mainBox">
@@ -186,6 +188,7 @@
                             <property name="CanFocus">True</property>
                             <property name="ShowScrollbars">True</property>
                             <property name="Text" translatable="yes" />
+                            <signal name="KeyPressEvent" handler="runProgramButton" after="yes" />
                           </widget>
                         </child>
                       </widget>

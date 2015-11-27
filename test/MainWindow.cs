@@ -1,6 +1,7 @@
-using System;
 using Gtk;
 using test;
+using Pango;
+using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.IO;
@@ -75,6 +76,12 @@ public partial class MainWindow: Gtk.Window
 		symbolTableTreeView.Model = symbolTableListStore;
 
 		sourceText.Buffer.Text = Constants.STARTPROG + "\n\n" + Constants.ENDPROG;
+		sourceText.ModifyFont(FontDescription.FromString("Courier 12"));
+		sourceText.Buffer.PlaceCursor (sourceText.Buffer.GetIterAtLine(1));
+
+		outputField.ModifyFont(FontDescription.FromString("Courier 12"));
+		outputField.ModifyBase(StateType.Normal, new Gdk.Color(0x00, 0x00, 0x00));
+		outputField.ModifyText(StateType.Normal, new Gdk.Color(0xFF, 0xFF, 0xFF));
 		sourceText.GrabFocus ();
 	}
 
