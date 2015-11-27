@@ -262,11 +262,13 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	private void switchParse(ref int i){
-		Dictionary<string,int> cases = new Dictionary<string,int> ();
+		Dictionary<Value,int> cases = new Dictionary<Value,int> ();
 		int index = 0;
 		string name = lexemeList [i].getName ();
 		string desc = lexemeList [i].getDescription ();
-		string value = table [Constants.IMPLICITVAR].getValue ();
+		string itValue = table [Constants.IMPLICITVAR].getValue ();
+		string itType = table [Constants.IMPLICITVAR].getType ();
+		Value omgwtf = new Value (Constants.DEFAULT, "DEFAULT");
 
 		for (; name != Constants.END_IF; i++) {
 			name = lexemeList [i].getName ();
@@ -274,29 +276,32 @@ public partial class MainWindow: Gtk.Window
 			if (!desc.Contains ("constant")) {
 				if (name == Constants.CASE) {
 					if (lexemeList [i + 1].getName ().Equals ("\"")) {
-						cases.Add (lexemeList [i + 2].getName (), i + 4);
+						cases.Add (new Value(lexemeList [i + 2].getName (), Constants.STRING), i + 4);
 					} else if (lexemeList [i + 1].getDescription ().Contains ("constant")) {
-						cases.Add (lexemeList [i + 1].getName (), i + 2);
+						string type = (Constants.INTVAL.Match (lexemeList [i + 1].getName ()).Success) ? Constants.INT : Constants.FLOAT;
+						cases.Add (new Value(lexemeList [i + 1].getName (), type), i + 2);
 					} else {
 						throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i + 1].getName ()));
 					}
 				} else if (name == Constants.ENDPROG){
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDPROG));
 				} else if (name == Constants.DEFAULT) {
-					cases.Add (Constants.DEFAULT, i + 1);
+					cases.Add (omgwtf, i + 1);
 				}
 			}
 		}
 
-		foreach (string  g in cases.Keys) {
-			if (value == g) {
+		foreach (Value g in cases.Keys) {
+			string val = g.getValue ();
+			string type = g.getType ();
+			if (itValue == val && itType == type) {
 				index = cases [g];
 			}
 		}
 
 		if (index == 0) {
-			if (cases.ContainsKey (Constants.DEFAULT))
-				index = cases [Constants.DEFAULT];
+			if (cases.ContainsKey (omgwtf))
+				index = cases [omgwtf];
 			else
 				return;
 		}
@@ -328,7 +333,7 @@ public partial class MainWindow: Gtk.Window
 			} else if (desc.Contains ("Operator")) {
 				i++;
 				toWrite = operatorList (lexemeList, ref i);
-				i--;
+				Console.WriteLine (lexemeList [i].getName ());
 			} else
 				throw new SyntaxException (WarningMessage.notPrintable (name));
 			outputField.Buffer.Text += toWrite;
@@ -447,7 +452,7 @@ public partial class MainWindow: Gtk.Window
 				i++;
 				string val = operatorList (lexemeList, ref i);
 				string type = returnType (val);
-
+				i--;
 				table [varName] = new Value (val, type);
 			} else
 				throw new SyntaxException (WarningMessage.RRightSide ());
@@ -459,7 +464,8 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	private String operatorList(List<Lexeme> lexemeList, ref int index){
-		if (index + 1 == lexemeList.Count)
+		if (lexemeList[index + 1].getDescription().Contains("break") 
+			|| lexemeList[index+1].getDescription().Contains("comment"))
 			throw new SyntaxException (WarningMessage.noArguments(lexemeList[index].getName()));
 
 		string name = lexemeList [index].getName ();
@@ -495,9 +501,7 @@ public partial class MainWindow: Gtk.Window
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.AN));
 				else
 					ANned = true;
-			} else if (Constants.INTVAL.Match (name).Success ||
-			           Constants.FLOATVAL.Match (name).Success ||
-			           Constants.BOOLVAL.Match (name).Success) {
+			} else if (desc.Contains("constant")) {
 				if (ANned) {
 					String[] type = desc.Split (delimiter);
 					stack.Push (new Value (name, type [0]));
@@ -511,10 +515,13 @@ public partial class MainWindow: Gtk.Window
 					ANned = false;
 				} else
 					throw new SyntaxException (WarningMessage.varNoDec (name));
+			} else if (name == "\"") {
+				continue;
 			} else {
 				stack.Push (new Value (name, "Operator"));
 				ANned = true;
 			}
+			Console.WriteLine (name);
 		}
 
 		result = evaluateCond ();
@@ -637,7 +644,6 @@ public partial class MainWindow: Gtk.Window
 		bool overPop = false;
 
 		while(stack.Count > 1){
-
 			try{
 				val2 = stack.Pop();
 				if(stack.Count > 1){
@@ -702,8 +708,8 @@ public partial class MainWindow: Gtk.Window
 					f2 = float.Parse (str2);
 					type = (val1.getType () == Constants.FLOAT || val2.getType () == Constants.FLOAT) ? Constants.FLOAT : Constants.INT;
 				}
-			} else {
-				if (float.TryParse (str1, out f1)) {
+			} else if(type1 != Constants.STRING || type2 != Constants.STRING) {
+				if (float.TryParse(str1, out f1)) {
 					if (float.TryParse (str2, out f2)) {
 						f1 = float.Parse (str1);
 						f2 = float.Parse (str2);
@@ -763,16 +769,22 @@ public partial class MainWindow: Gtk.Window
 						throw new SyntaxException (WarningMessage.canAccept (Constants.MIN, Constants.INT + " OR " + Constants.FLOAT));
 					break;
 				case Constants.EQUAL:
-					if (type1 == type2 && type1 != Constants.NOTYPE)
-						result = (f1 == f2) ? Constants.TRUE : Constants.FALSE;
-					else
+					if (type1 == type2 && type1 != Constants.NOTYPE) {
+						if (type1 != "TROOF")
+							result = (f1 == f2) ? Constants.TRUE : Constants.FALSE;
+						else
+							result = (str1 == str2) ? Constants.TRUE : Constants.FALSE;
+					}else
 						result = Constants.FALSE;
 					type = Constants.BOOL;
 					break;
 				case Constants.NOTEQUAL:
-					if (type1 == type2 && type1 != Constants.NOTYPE)
-						result = (f1 != f2) ? Constants.TRUE : Constants.FALSE;
-					else
+					if (type1 == type2 && type1 != Constants.NOTYPE) {
+						if (type1 != "TROOF")
+							result = (f1 != f2) ? Constants.TRUE : Constants.FALSE;
+						else
+							result = (str1 != str2) ? Constants.TRUE : Constants.FALSE;
+					}else
 						result = Constants.TRUE;
 					type = Constants.BOOL;
 					break;
@@ -830,7 +842,7 @@ public partial class MainWindow: Gtk.Window
 		String result = "";
 		bool hasEnded = false;
 		bool needNext = false;
-		for (; index < lexemeList.Count; index++) {
+		for (; !lexemeList[index].getDescription().Contains("break"); index++) {
 
 			string name = lexemeList [index].getName ();
 			string dec = lexemeList [index].getDescription ();

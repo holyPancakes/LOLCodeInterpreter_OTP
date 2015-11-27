@@ -6,8 +6,8 @@ namespace test
 	public static class Constants
 	{
 		private const String varIdent = "^[A-Za-z][A-Za-z0-9_]*$"; //regex for variable
-		private const String numbr = "^\\d+$"; //regex for numbr
-		private const String numbar = "^(\\d+|\\d*\\.\\d+)$"; //regex for numbar
+		private const String numbr = "^-?\\d+$"; //regex for numbr
+		private const String numbar = "^-?(\\d+|\\d*\\.\\d+)$"; //regex for numbar
 		private const String troof = "^(WIN|FAIL)$"; //regex for troof
 
 		public const string PRINT = "VISIBLE"; //done
@@ -71,9 +71,9 @@ namespace test
 		public const String TRUE = "WIN";
 		public const String FALSE = "FAIL";
 
-		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		public static Regex INTVAL = new Regex (numbr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		public static Regex FLOATVAL = new Regex (numbar, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		public static Regex BOOLVAL = new Regex (troof, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled);
+		public static Regex INTVAL = new Regex (numbr, RegexOptions.Compiled);
+		public static Regex FLOATVAL = new Regex (numbar, RegexOptions.Compiled);
+		public static Regex BOOLVAL = new Regex (troof, RegexOptions.Compiled);
 	}
 }
