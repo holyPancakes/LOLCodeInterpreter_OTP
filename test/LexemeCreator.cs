@@ -9,6 +9,7 @@ namespace test
 	{
 		private Boolean quotedDouble;
 		private Boolean isComment;
+		private Boolean oneLineComment;
 		private String str;
 		private String token;
 
@@ -16,6 +17,7 @@ namespace test
 		{
 			quotedDouble = false;
 			isComment = false;
+			oneLineComment = false;
 		}
 
 		public List<Lexeme> process(String[] lines, ref int i)
@@ -32,10 +34,12 @@ namespace test
 						if ((token.EndsWith (" ") || token.Length == 0) && c == ' ')
 							continue; //ignore if it is a space
 						else if (token.Equals (Constants.ONELINE)) {
-							Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
-							lex.Add (temp);
-							token = "";
-							return lex;
+							if (!isComment) {
+								Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
+								oneLineComment = true;
+								lex.Add (temp);
+								token = "";
+							}
 						} else if (token.Equals (Constants.MULTILINE)) {
 							Lexeme temp = new Lexeme (Constants.MULTILINE, "Multiline comment");
 							lex.Add (temp);
@@ -49,14 +53,14 @@ namespace test
 								token = "";
 							} else
 								throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
-						} else if (isComment)
+						} else if (isComment || oneLineComment)
 							token = "";
 						else
 							checker (lex, c); //else checks the token if it is a keyword or a value
 						if(c == Constants.SOFTBREAKCHAR)
 							lex.Add(new Lexeme(Constants.SOFTBREAK, "Soft-command break"));
 					} else if (c == '\"') { //checks if the char is a double quotes
-						if (isComment)
+						if (isComment || oneLineComment)
 							continue;
 						quotedDouble = !quotedDouble; //switches the flags of double quotes
 						if (!quotedDouble) { //if the double quote becomes false
@@ -79,8 +83,8 @@ namespace test
 				if (token.Equals (Constants.ONELINE)) {
 					Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
 					lex.Add (temp);
+					isComment = true;
 					token = "";
-					return lex;
 				} else if (token.Equals (Constants.MULTILINE)) {
 					Lexeme temp = new Lexeme (Constants.MULTILINE, "Multiline comment");
 					lex.Add (temp);
@@ -94,7 +98,7 @@ namespace test
 						token = "";
 					} else
 						throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.ENDCOMMENT));
-				} else if (isComment)
+				} else if (isComment || oneLineComment)
 					token = "";
 				else
 					checker (lex, '\n'); //checks the token of it is not yet empty
@@ -102,7 +106,9 @@ namespace test
 				if (token.Length != 0) { //checks if the token is not a keyword and found dangling in the code
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (token));
 				}
+
 				i++;
+				oneLineComment = false;
 				lex.Add(new Lexeme(Constants.EOL, "Hard-command break"));
 			}
 

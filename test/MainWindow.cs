@@ -418,7 +418,6 @@ public partial class MainWindow: Gtk.Window
 						i += 3;
 						string val = operatorList (lexemeList, ref i);
 						string type = returnType(val);
-
 						table.Add (name, new Value (val, type));
 					} else
 						throw new SyntaxException (WarningMessage.expectedWord ("constant or variable", Constants.STARTINIT));
@@ -426,7 +425,6 @@ public partial class MainWindow: Gtk.Window
 					throw new SyntaxException (WarningMessage.expectedWord (Constants.STARTINIT, "variable declaration"));
 			} else
 				throw new SyntaxException (WarningMessage.expectedWord ("variable declaration", Constants.STARTINIT));
-			i += 3;
 		}
 	}
 
@@ -490,48 +488,6 @@ public partial class MainWindow: Gtk.Window
 			throw new WarningException(WarningMessage.unexpectedLexeme(name));
 
 		index--;
-		return result;
-	}
-
-	private String mathOperation(List<Lexeme> lexemeList, ref int index){
-		bool ANned = true;
-		char[] delimiter = {' '}; 
-		string result = "";
-		for (; !lexemeList [index].getDescription ().Contains ("break"); index++) {
-			String name = lexemeList [index].getName ();
-			String desc = lexemeList [index].getDescription ();
-
-			if (desc.Contains ("comment")) {
-				continue;
-			} else if (name == Constants.AN) {
-				if (ANned)
-					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.AN));
-				else
-					ANned = true;
-			} else if (desc.Contains("constant")) {
-				if (ANned) {
-					String[] type = desc.Split (delimiter);
-					stack.Push (new Value (name, type [0]));
-					ANned = false;
-				} else
-					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
-			} else if (desc == Constants.VARDESC) {
-				if (table.ContainsKey (name)) {
-					Value val = table [name];
-					stack.Push (val);
-					ANned = false;
-				} else
-					throw new SyntaxException (WarningMessage.varNoDec (name));
-			} else if (name == "\"") {
-				continue;
-			} else {
-				stack.Push (new Value (name, "Operator"));
-				ANned = true;
-			}
-			Console.WriteLine (name);
-		}
-
-		result = evaluateCond ();
 		return result;
 	}
 
@@ -642,50 +598,99 @@ public partial class MainWindow: Gtk.Window
 		return result;
 	}
 
+	private String mathOperation(List<Lexeme> lexemeList, ref int index){
+		bool ANned = true;
+		char[] delimiter = {' '}; 
+		string result = "";
+
+		String name = lexemeList [index].getName ();
+		String desc = lexemeList [index].getDescription ();
+
+		for (; !desc.Contains("break"); index++,
+		     name = lexemeList [index].getName (),
+		     desc = lexemeList [index].getDescription (),
+		     Console.WriteLine("haha " + name)) {
+
+			if (desc.Contains ("comment")) {
+				continue;
+			} else if (name == Constants.AN) {
+				if (ANned)
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (Constants.AN));
+				else
+					ANned = true;
+			} else if (desc.Contains("constant")) {
+				if (ANned) {
+					String[] type = desc.Split (delimiter);
+					stack.Push (new Value (name, type [0]));
+					ANned = false;
+				} else
+					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
+			} else if (desc == Constants.VARDESC) {
+				if (table.ContainsKey (name)) {
+					Value val = table [name];
+					stack.Push (val);
+					ANned = false;
+				} else
+					throw new SyntaxException (WarningMessage.varNoDec (name));
+			} else if (name == "\"") {
+				continue;
+			} else {
+				stack.Push (new Value (name, "Operator"));
+				ANned = true;
+			}
+		}
+
+		result = evaluateCond ();
+		return result;
+	}
+
 	private String evaluateCond (){
-		Value val1 = new Value(Constants.NULL, Constants.NOTYPE);
-		Value val2 = new Value(Constants.NULL, Constants.NOTYPE);
+		List<Value> val = new List<Value> ();
 		Value op = null;
-		Value temp = null;
 		String result = "";
-		bool overPop = false;
+
+		//SUM OF PRODUKT OF DIFF OF 5 AN 2 AN MOD OF 8 AN 5 AN PRODUKT OF DIFF OF 5 AN 2 AN MOD OF 8 AN 5 BTW COMPLICATED SHIT
 
 		while(stack.Count > 1){
+			foreach (Value v in stack) {
+				Console.WriteLine (v.getValue ());
+			}
+			Console.WriteLine ();
 			try{
-				val2 = stack.Pop();
+				val.Add(stack.Pop());
 				if(stack.Count > 1){
 					if(stack.Peek().getValue() == Constants.NOT){
-						if(val2.getType() != Constants.BOOL)
-							throw new SyntaxException(WarningMessage.unexpectedLexeme(val2.getValue()));
+						if(val[0].getType() != Constants.BOOL)
+							throw new SyntaxException(WarningMessage.unexpectedLexeme(val[1].getValue()));
 						else{
 							stack.Pop();
-							val2 = new Value((val2.getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.BOOL);
+							val[0] = new Value((val[0].getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.BOOL);
 						}
 					}
 				}
 				if(stack.Count > 1){
-					val1 = stack.Pop();
+					val.Add(stack.Pop());
 					if(stack.Peek().getValue() == Constants.NOT){
-						if(val2.getType() != Constants.BOOL)
-							throw new SyntaxException(WarningMessage.unexpectedLexeme(val2.getValue()));
+						if(val[1].getType() != Constants.BOOL)
+							throw new SyntaxException(WarningMessage.unexpectedLexeme(val[1].getValue()));
 						else{
 							stack.Pop();
-							val2 = new Value((val2.getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.BOOL);
+							val[1] = new Value((val[1].getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.BOOL);
 						}
 					}
 				}
 				op = stack.Pop();
-				if(op.getType() != "Operator"){
-					overPop = true;
-
-					temp = val2;
-					val2 = val1;
-					val1 = op;
+				while(op.getType() != "Operator"){
+					val.Add(op);
 					op = stack.Pop();
 				}
 			} catch(Exception){
 				throw new SyntaxException (WarningMessage.lackOperands() + " Resulted in stack underflow.");
 			}
+
+			int count = val.Count-1;
+			Value val1 = val [count];
+			Value val2 = val [count - 1];
 
 			String str1 = val1.getValue ();
 			String str2 = val2.getValue ();
@@ -819,11 +824,6 @@ public partial class MainWindow: Gtk.Window
 					throw new Exception ("Something went wrong in evaluate");
 				}
 
-				if (overPop) {
-					stack.Push (temp);
-					overPop = false;
-				}
-
 				try{
 					if (stack.Peek ().getValue () == Constants.NOT) {
 						if (type != Constants.BOOL)
@@ -838,6 +838,12 @@ public partial class MainWindow: Gtk.Window
 				}
 				
 				stack.Push (new Value(result, type));
+				val.RemoveAt (val.Count - 1);
+				val.RemoveAt (val.Count - 1);
+				while(val.Count != 0) {
+					stack.Push (val[val.Count-1]);
+					val.RemoveAt (val.Count - 1);
+				}
 			}
 		}
 

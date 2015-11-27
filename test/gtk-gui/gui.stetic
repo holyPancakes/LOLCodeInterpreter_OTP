@@ -127,7 +127,7 @@
     <property name="MemberName" />
     <property name="WidthRequest">800</property>
     <property name="HeightRequest">600</property>
-    <property name="Title" translatable="yes">MainWindow</property>
+    <property name="Title" translatable="yes">ANG GANDA NI MAAM KAT LOLCODE INTERPRETER</property>
     <property name="WindowPosition">CenterAlways</property>
     <property name="Resizable">False</property>
     <property name="AllowGrow">False</property>
