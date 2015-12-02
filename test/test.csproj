@@ -78,4 +78,7 @@
     <Compile Include="WarningMessage.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Include="WhatItCanDo.txt" />
+  </ItemGroup>
 </Project>

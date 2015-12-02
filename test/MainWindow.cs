@@ -15,14 +15,17 @@ public partial class MainWindow: Gtk.Window
 	private Stack<Value> stack = new Stack<Value> ();
 	private Stack<Value> stackArity = new Stack<Value>();
 
-	private Dictionary<String, Value> table = new Dictionary<String, Value>(); //symbol table
+	private List<Dictionary<String, Value>> allTable = new List<Dictionary<String, Value>>(); //symbol table
+	private Dictionary<String, Value> table;
 	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
 	private Boolean hasStarted; //checks if the program already started using HAI
 	private Boolean hasError;
 	private Gtk.ListStore tokensListStore;
 	private Gtk.ListStore symbolTableListStore;
 
-	TextView inputTextView;
+	private TextView inputTextView;
+
+	private int lineNo;
 
 	public MainWindow (): base (Gtk.WindowType.Toplevel){
 		Build ();
@@ -88,10 +91,9 @@ public partial class MainWindow: Gtk.Window
 	public void Interpret(){
 		char[] delimeter = {'\n'};
 
-		Console.WriteLine (sourceText.Buffer.Text);
-		Console.WriteLine ("==========");
 		outputField.Buffer.Text = "";
 
+		lineNo = 0;
 		hasStarted = false;
 		hasEnded = false;
 		hasError = false;
@@ -99,47 +101,52 @@ public partial class MainWindow: Gtk.Window
 		tokensListStore.Clear ();
 		symbolTableListStore.Clear ();
 		lexemeList.Clear ();
-		table.Clear ();
+		allTable.Clear ();
 		stack.Clear ();
 		stackArity.Clear ();
 		lexer.reset ();
 
-		table.Add (Constants.IMPLICITVAR, new Value (Constants.NULL, Constants.NOTYPE));
+		Console.WriteLine (sourceText.Buffer.Text);
+		Console.WriteLine ("==========");
 
 		string sourceString = sourceText.Buffer.Text;
 		string[] sourceLines = sourceString.Split (delimeter);
-		int i = 0;
 		int junk = 0;
 		try {
 			lineField.Buffer.Text = "Creating Lexemes...";
-			lexemeList = lexer.process (sourceLines, ref i); //creates an array of lexemes
-			i=0;
+			lexemeList = lexer.process (sourceLines, ref lineNo); //creates an array of lexemes
+			lineNo = 0;
 			UpdateLexemes(lexemeList);
 			lineField.Buffer.Text = "Running the Lexemes...";
-			parse (ref i,ref junk, Constants.STARTPROG); //parses the lexemes
+			parse (ref junk, Constants.STARTPROG); //parses the lexemes
 		} catch (SyntaxException e) { //if something went wrong, prints the error on screen
 			hasError = true;
-			outputField.Buffer.Text += "\n" + "ERROR on line " + (i+1) + ": " + e.Message+ "\n";
-			return;
-		} catch (WarningException e){
-			outputField.Buffer.Text += "\n" + "WARNING on line " + (i+1) + ": " + e.Message+ "\n";
+			outputField.Buffer.Text += "\n" + "ERROR on line " + (lineNo+1) + ": " + e.Message+ "\n" + e.StackTrace+ "\n";
+			Console.WriteLine ("\n" + "ERROR on line " + (lineNo + 1) + ": " + e.Message + "\n" + e.StackTrace + "\n");
 			return;
 		} catch (Exception e){
-			outputField.Buffer.Text += "\n" + "CRASHED on line " + (i+1) + ": " + e.Message + "\n" + e.StackTrace+ "\n";
+			outputField.Buffer.Text += "\n" + "CRASHED on line " + (lineNo+1) + ": " + e.Message + "\n" + e.StackTrace+ "\n";
+			Console.WriteLine ("\n" + "CRASHED on line " + (lineNo + 1) + ": " + e.Message + "\n" + e.StackTrace + "\n");
 			return;
 		}
-		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR on line " + (sourceLines.Length+1) + ": Program is not closed properly!\n";
-		if(hasEnded) lineField.Buffer.Text = "Done!";
+		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR on line " + sourceLines.Length + ": Reach end of file. Did not found " + Constants.ENDPROG + "\n";
+		else if(hasEnded) lineField.Buffer.Text = "Done!";
 	}
 
-	public void parse(ref int lineNo, ref int i, string fromWhere){
+	public void parse(ref int i, string fromWhere){
 		bool nextCommand = false;
 		char[] space = { ' ' };
 		string desc;
 		string name;
 
+		allTable.Add(new Dictionary<string, Value> ());
+		table = allTable [allTable.Count-1];
+
 		if (lexemeList.Count == 0)
 			return;
+
+		if (fromWhere == Constants.STARTPROG)
+			allTable[0].Add (Constants.IMPLICITVAR, new Value (Constants.NULL, Constants.NOTYPE));
 
 		for(; i < lexemeList.Count; i++){
 			desc = lexemeList [i].getDescription ();
@@ -153,7 +160,7 @@ public partial class MainWindow: Gtk.Window
 				nextCommand = false;
 				if(name == Constants.EOL) lineNo++;
 			} else if (nextCommand) {
-				throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
+				throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
 			}else if (name == Constants.STARTPROG) {
 				if(hasStarted) 
 					throw new SyntaxException (WarningMessage.unexpectedLexeme(Constants.STARTPROG));
@@ -175,13 +182,14 @@ public partial class MainWindow: Gtk.Window
 				} else if (name == Constants.ASSIGN) { //checks if the keyword is R
 					assignParse (ref i);
 					nextCommand = true;
-				} else if (desc == Constants.VARDESC) { //checks if the keyword is KTHXBYE
-					if (!table.ContainsKey (lexemeList [i].getName ())) //check if the variable is already declared
-						throw new SyntaxException (WarningMessage.varNoDec (lexemeList [i].getName ()));
+				} else if (desc == Constants.VARDESC) { //checks if the keyword is a Variable Description
+					int index = findVarName(name);
+					if (index == -1) //check if the variable is already declared
+						throw new SyntaxException (WarningMessage.varNoDec (name));
 					else if (lexemeList [i + 1].getName () == Constants.ASSIGN)
 						continue;
 					else { 
-						table [Constants.IMPLICITVAR] = table [lexemeList [i].getName ()];
+						allTable[0][Constants.IMPLICITVAR] = allTable[index][name];
 						nextCommand = true;
 					}
 				} else if (name == Constants.ENDPROG) { //checks if the keyword is KTHXBYE
@@ -189,21 +197,14 @@ public partial class MainWindow: Gtk.Window
 					nextCommand = true;
 				} else if (desc.Contains ("Operator")) {
 					string value = operatorList (lexemeList, ref i);
-					string type = "";
-					if (Constants.INTVAL.Match (value).Success)
-						type = Constants.INT;
-					else if (Constants.FLOATVAL.Match (value).Success)
-						type = Constants.FLOAT;
-					else if (Constants.BOOLVAL.Match (value).Success)
-						type = Constants.BOOL;
-					else
-						type = Constants.STRING;
-					table [Constants.IMPLICITVAR] = new Value (value, type);
+					string type = returnType (value);
+
+					allTable[0][Constants.IMPLICITVAR] = new Value (value, type);
 					nextCommand = true;
 				} else if (desc.Contains ("constant")) {
 					if (lexemeList [i - 1].getName () != Constants.CASE) {
 						string[] type = desc.Split (space);
-						table [Constants.IMPLICITVAR] = new Value (lexemeList [i].getName (), type [0]);
+						allTable[0][Constants.IMPLICITVAR] = new Value (name, type [0]);
 					}
 					nextCommand = true;
 				} else if (name == Constants.SWITCH) {
@@ -219,27 +220,32 @@ public partial class MainWindow: Gtk.Window
 					name == Constants.ELSE) {
 					if (fromWhere == Constants.SWITCH &&
 						(name == Constants.END_IF || name == Constants.BREAK)) {
-						return;
+						break;
 					} else if (fromWhere == Constants.IF && 
 						(name == Constants.END_IF || name == Constants.ELSE)) {
-						return;
+						break;
 					} else 
-						throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
+						throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
 				} else if (name == Constants.CASE || name == Constants.DEFAULT) {
 					if(fromWhere == Constants.STARTPROG) 
-						throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [i].getName ()));
+						throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
 				}else
-					throw new WarningException(WarningMessage.unexpectedLexeme(lexemeList[i].getName()));
+					throw new WarningException(WarningMessage.unexpectedLexeme(name));
 			}
-			UpdateTables();
 		}
+
+		if (allTable.Count > 1) {
+			allTable.Remove (table);
+			table = allTable [allTable.Count - 1];
+		}
+		UpdateTables();
 	}
 
 	private void ifParse(ref int i){
 		int elseindex = 0;
 		int ifIndex = 0;
 		int index = 0;
-		string value = table [Constants.IMPLICITVAR].getValue ();
+		string value = allTable[0][Constants.IMPLICITVAR].getValue ();
 		string name = lexemeList [i].getName ();
 		string desc = lexemeList [i].getDescription ();
 
@@ -264,8 +270,7 @@ public partial class MainWindow: Gtk.Window
 		if (index == 0)
 			return;
 		
-		int junk = 0;
-		parse (ref junk, ref index, Constants.IF);
+		parse (ref index, Constants.IF);
 	}
 
 	private void switchParse(ref int i){
@@ -273,8 +278,8 @@ public partial class MainWindow: Gtk.Window
 		int index = 0;
 		string name = lexemeList [i].getName ();
 		string desc = lexemeList [i].getDescription ();
-		string itValue = table [Constants.IMPLICITVAR].getValue ();
-		string itType = table [Constants.IMPLICITVAR].getType ();
+		string itValue = allTable[0][Constants.IMPLICITVAR].getValue ();
+		string itType = allTable[0][Constants.IMPLICITVAR].getType ();
 		Value omgwtf = new Value (Constants.DEFAULT, "DEFAULT");
 
 		for (; name != Constants.END_IF; i++) {
@@ -313,8 +318,7 @@ public partial class MainWindow: Gtk.Window
 				return;
 		}
 
-		int junk = 0;
-		parse (ref junk, ref index, Constants.SWITCH);
+		parse (ref index, Constants.SWITCH);
 	}
 
 	private void printParse(ref int i){
@@ -332,15 +336,15 @@ public partial class MainWindow: Gtk.Window
 				toWrite = name + "\n";
 				i++;
 			} else if (desc == Constants.VARDESC) {
-				if (!table.ContainsKey (name))
+				int index = findVarName (name);
+				if (index == -1)
 					throw new SyntaxException (WarningMessage.varNoDec (name));
-				Value val = table [name];
+				Value val = allTable[index][name];
 				toWrite = val.getValue () + "\n";
 				i++;
 			} else if (desc.Contains ("Operator")) {
 				i++;
 				toWrite = operatorList (lexemeList, ref i);
-				Console.WriteLine (lexemeList [i].getName ());
 			} else
 				throw new SyntaxException (WarningMessage.notPrintable (name));
 			outputField.Buffer.Text += toWrite;
@@ -353,7 +357,8 @@ public partial class MainWindow: Gtk.Window
 		string desc = lexemeList [i+1].getDescription ();
 
 		if (desc == Constants.VARDESC) {
-			if (table.ContainsKey (name)) {
+			int index = findVarName (name);
+			if (index != -1) {
 				Dialog inputPrompt = null;
 				ResponseType response = ResponseType.None;
 
@@ -372,7 +377,7 @@ public partial class MainWindow: Gtk.Window
 						if (response == ResponseType.Yes) {
 							string input = inputTextView.Buffer.Text;
 							Value val = new Value (input, Constants.STRING);
-							table [lexemeList [i + 1].getName ()] = val; 
+							allTable[index][lexemeList [i + 1].getName ()] = val; 
 						}
 						inputPrompt.Destroy ();
 					}
@@ -391,7 +396,7 @@ public partial class MainWindow: Gtk.Window
 
 		if (lexemeList[i+2].getName() != Constants.STARTINIT) {
 			if (desc == Constants.VARDESC) {
-				if (table.ContainsKey (name))
+				if (findVarName (name) != -1)
 					throw new SyntaxException (WarningMessage.varYesDec (name));
 				table.Add (name, new Value (Constants.NULL, Constants.NOTYPE));
 			} else
@@ -399,21 +404,23 @@ public partial class MainWindow: Gtk.Window
 			i++;
 		} else {
 			if (desc == Constants.VARDESC) {
-				if (table.ContainsKey (name))
+				if (findVarName (name) != -1)
 					throw new SyntaxException (WarningMessage.varYesDec (name));
 				Lexeme l2 = lexemeList [i + 2];
 				if (l2.getName ().Equals (Constants.STARTINIT)) {
 					Lexeme l3 = lexemeList [i + 3];
+					int index = findVarName (l3.getName ());
 					if (l3.getDescription ().EndsWith ("constant")) {
 						String[] type = l3.getDescription ().Split (spaces);
 						table.Add (name, new Value (l3.getName (), type [0]));
+						i += 3;
 					} else if (l3.getName ().Equals ("\"")) {
 						Lexeme l4 = lexemeList [i + 4];
 						String[] type = l4.getDescription ().Split (spaces);
 						table.Add (name, new Value (l4.getName (), type [0]));
-						i += 2;
-					} else if (table.ContainsKey (l3.getName ())) {
-						table.Add (name, table [l3.getName ()]);
+						i += 5;
+					} else if ( index != -1) {
+						table.Add (name, allTable[index][l3.getName ()]);
 					} else if (l3.getDescription ().Contains ("Operator")) {
 						i += 3;
 						string val = operatorList (lexemeList, ref i);
@@ -434,31 +441,36 @@ public partial class MainWindow: Gtk.Window
 		string valueName = lexemeList [i+1].getName ();
 		string valueDesc = lexemeList [i+1].getDescription ();
 		char[] spaces = { ' ' };
+		int index = findVarName (varName);
+
+		if (index == -1)
+			throw new SyntaxException (WarningMessage.varNoDec (varName));
 
 		if (varDesc == Constants.VARDESC) {
 			if (valueDesc.EndsWith ("constant")) {
 				String[] type = valueDesc.Split (spaces);
 				Value old = table [varName];
 
-				table [varName] = new Value (valueName, type [0]);
+				allTable[index][varName] = new Value (valueName, type [0]);
 			} else if(valueName == "\""){
 				Lexeme yarn = lexemeList [i + 2];
 				String[] type = yarn.getDescription ().Split (spaces);
 				Value old = table [varName];
 
-				table [varName] = new Value (yarn.getName (), type [0]);
+				allTable[index][varName] = new Value (yarn.getName (), type [0]);
 				i+=2;
 			}else if (valueDesc == Constants.VARDESC) {
-				if (!table.ContainsKey (valueName))
+				int index2 = findVarName (valueName);
+				if (index2 == -1)
 					throw new SyntaxException (WarningMessage.varNoDec (valueName));
 
-				table[varName] = table [valueName];
+				allTable[index][varName] = allTable[index2][valueName];
 			} else if (valueDesc.Contains ("Operator")) {
 				i++;
 				string val = operatorList (lexemeList, ref i);
 				string type = returnType (val);
 				i--;
-				table [varName] = new Value (val, type);
+				allTable[index][varName] = new Value (val, type);
 			} else
 				throw new SyntaxException (WarningMessage.RRightSide ());
 
@@ -516,8 +528,9 @@ public partial class MainWindow: Gtk.Window
 				} else
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
 			} else if (desc == Constants.VARDESC){
-				if (table.ContainsKey (name)) {
-					Value val = table [name];
+				int i = findVarName (name);
+				if (i != -1) {
+					Value val = allTable[i][name];
 					stackArity.Push (val);
 					ANned = false;
 				} else
@@ -608,8 +621,7 @@ public partial class MainWindow: Gtk.Window
 
 		for (; !desc.Contains("break"); index++,
 		     name = lexemeList [index].getName (),
-		     desc = lexemeList [index].getDescription (),
-		     Console.WriteLine("haha " + name)) {
+		     desc = lexemeList [index].getDescription ()) {
 
 			if (desc.Contains ("comment")) {
 				continue;
@@ -626,8 +638,9 @@ public partial class MainWindow: Gtk.Window
 				} else
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
 			} else if (desc == Constants.VARDESC) {
-				if (table.ContainsKey (name)) {
-					Value val = table [name];
+				int i = findVarName (name);
+				if (i != -1) {
+					Value val = allTable [i][name];
 					stack.Push (val);
 					ANned = false;
 				} else
@@ -652,10 +665,6 @@ public partial class MainWindow: Gtk.Window
 		//SUM OF PRODUKT OF DIFF OF 5 AN 2 AN MOD OF 8 AN 5 AN PRODUKT OF DIFF OF 5 AN 2 AN MOD OF 8 AN 5 BTW COMPLICATED SHIT
 
 		while(stack.Count > 1){
-			foreach (Value v in stack) {
-				Console.WriteLine (v.getValue ());
-			}
-			Console.WriteLine ();
 			try{
 				val.Add(stack.Pop());
 				if(stack.Count > 1){
@@ -874,12 +883,13 @@ public partial class MainWindow: Gtk.Window
 				needNext = true;
 			}
 			else if (dec.EndsWith (Constants.VARDESC)) {
-				if (table.ContainsKey (name)) {
+				int i = findVarName (name);
+				if (i != -1) {
 					string varname = name;
-					if (table [varname].getValue ().Equals (Constants.NULL))
+					if (allTable [i][varname].getValue ().Equals (Constants.NULL))
 						continue;
 					else
-						result += table [varname].getValue ();
+						result += allTable[i][varname].getValue ();
 				} else
 					throw new SyntaxException (WarningMessage.varNoDec(name));
 				needNext = true;
@@ -901,9 +911,11 @@ public partial class MainWindow: Gtk.Window
 
 	public void UpdateTables(){
 		symbolTableListStore.Clear ();
-		foreach (string key in table.Keys) {
-			Value val = table [key];
-			symbolTableListStore.AppendValues (key, val.getValue (), val.getType ());
+		foreach(Dictionary<string, Value> t in allTable){
+			foreach (string key in t.Keys) {
+				Value val = t [key];
+				symbolTableListStore.AppendValues (key, val.getValue (), val.getType ());
+			}
 		}
 	}
 
@@ -920,6 +932,15 @@ public partial class MainWindow: Gtk.Window
 			type = Constants.STRING;
 
 		return type;
+	}
+
+	private int findVarName(string varname){
+		for (int i = allTable.Count-1; i >= 0; i--) {
+			if (allTable [i].ContainsKey (varname))
+				return i;
+		}
+
+		return -1;
 	}
 
 	protected void OnDeleteEvent (object sender, DeleteEventArgs a){

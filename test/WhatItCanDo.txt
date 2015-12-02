@@ -1,0 +1,12 @@
+﻿1. Spaces in between keywords
+2. Soft line breaks (comma)
+3. Scoping (since nested if-else is not implemented, not sure if dynamic or static)
+-------------------------
+4. Functions (HOW DUZ I, IF YOU SAY SO, FOUND YR, GTFO)
+	HOW DUZ I [function name] [arg1] AN [arg2] ...- starts the function
+	IF YOU SAY SO - ends the function
+	FOUND YR [expression]- returns a value. Stored in IT if no variable will catch it
+	GTFO - returns NOOB
+5. Typecasting (MAEK, IS NOW A)
+	MAEK [expression] A [type]- changes an expression to a datatype
+	[variable name] IS NOW A [type] - changes the a variable to a datatype
