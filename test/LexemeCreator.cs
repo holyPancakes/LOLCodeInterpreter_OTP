@@ -162,6 +162,16 @@ namespace test
 				temp = new Lexeme (Constants.EXPCAST, "Typecasts an expression");
 			else if (token.Equals (Constants.A))
 				temp = new Lexeme (Constants.A, "For " + Constants.EXPCAST);
+			else if (token.Equals (Constants.YR))
+				temp = new Lexeme (Constants.YR, "Separates the arguments");
+			else if (token.Equals (Constants.INC))
+				temp = new Lexeme (Constants.INC, "Increments a variable");
+			else if (token.Equals (Constants.DEC))
+				temp = new Lexeme (Constants.DEC, "Decrements a variable");
+			else if (token.Equals (Constants.LOOPCONDFAIL))
+				temp = new Lexeme (Constants.LOOPCONDFAIL, "Loops until FAIL");
+			else if (token.Equals (Constants.LOOPCONDWIN))
+				temp = new Lexeme (Constants.LOOPCONDWIN, "Loops until WIN");
 			else if (token.StartsWith ("A")) {
 				if (token.Equals (Constants.MANY_AND))
 					temp = new Lexeme (Constants.MANY_AND, "AND Arity Operator");
@@ -292,7 +302,19 @@ namespace test
 					temp = new Lexeme(Constants.ENDFUNC, "Ends the functions");
 				else if (token.Equals (Constants.CALLFUNC))
 					temp = new Lexeme(Constants.CALLFUNC, "Calls the functions");
-				else if(!token.EndsWith("HAS") && !token.EndsWith("NOW") && !token.EndsWith("IZ") && !token.EndsWith("YOU") && !token.EndsWith("SAY") && token.Contains(" ")){
+				else if (token.Equals (Constants.STARTLOOP))
+					temp = new Lexeme(Constants.STARTLOOP, "Starts the loop");
+				else if (token.Equals (Constants.ENDLOOP))
+					temp = new Lexeme(Constants.ENDLOOP, "Ends the loop");
+				else if(!token.EndsWith("HAS") && 
+					!token.EndsWith("NOW") && 
+					!token.EndsWith("IN") && 
+					!token.EndsWith("OUTTA") && 
+					!token.EndsWith("IZ") && 
+					!token.EndsWith("U") && 
+					!token.EndsWith("SAY") && 
+					token.Contains(" ")
+				){
 					string[] str = token.Split(delimiter, 2);
 					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);

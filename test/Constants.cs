@@ -66,7 +66,7 @@ namespace test
 		public const String EXPCAST = "MAEK";
 
 		public const String STARTFUNC = "HOW DUZ I";
-		public const String ENDFUNC = "IF YOU SAY SO";
+		public const String ENDFUNC = "IF U SAY SO";
 		public const String RETURN = "FOUND YR";
 		public const String CALLFUNC = "I IZ";
 
@@ -77,6 +77,14 @@ namespace test
 		public const String FLOAT = "NUMBAR";
 		public const String STRING = "YARN";
 		public const String BOOL = "TROOF";
+
+		public const String STARTLOOP = "IM IN YR";
+		public const String ENDLOOP = "IM OUTTA YR";
+		public const String YR = "YR";
+		public const String INC = "UPPIN";
+		public const String DEC = "NERFIN";
+		public const String LOOPCONDFAIL = "TIL";
+		public const String LOOPCONDWIN = "WILE";
 
 		public const String TRUE = "WIN";
 		public const String FALSE = "FAIL";
