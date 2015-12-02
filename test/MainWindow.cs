@@ -186,7 +186,7 @@ public partial class MainWindow: Gtk.Window
 					int index = findVarName(name);
 					if (index == -1) //check if the variable is already declared
 						throw new SyntaxException (WarningMessage.varNoDec (name));
-					else if (lexemeList [i + 1].getName () == Constants.ASSIGN)
+					else if (lexemeList [i + 1].getName () == Constants.ASSIGN || lexemeList [i + 1].getName () == Constants.VARCAST)
 						continue;
 					else { 
 						allTable[0][Constants.IMPLICITVAR] = allTable[index][name];
