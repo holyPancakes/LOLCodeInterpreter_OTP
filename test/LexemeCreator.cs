@@ -160,6 +160,8 @@ namespace test
 				temp = new Lexeme (Constants.NOTEQUAL, "Operator for not equal comparison");
 			else if (token.Equals (Constants.EXPCAST))
 				temp = new Lexeme (Constants.EXPCAST, "Typecasts an expression");
+			else if (token.Equals (Constants.A))
+				temp = new Lexeme (Constants.A, "For " + Constants.EXPCAST);
 			else if (token.StartsWith ("A")) {
 				if (token.Equals (Constants.MANY_AND))
 					temp = new Lexeme (Constants.MANY_AND, "AND Arity Operator");

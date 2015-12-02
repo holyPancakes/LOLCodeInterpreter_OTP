@@ -27,7 +27,9 @@ namespace test
 		public const string DEFAULT = "OMGWTF"; //
 		public const string BREAK = "GTFO"; //
 
+		public const string A = "A";//done
 		public const string AN = "AN";//done
+
 		public const string ADD = "SUM OF";//done
 		public const string SUB = "DIFF OF"; //under
 		public const string MUL = "PRODUKT OF"; //under
