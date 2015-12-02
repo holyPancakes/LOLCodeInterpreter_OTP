@@ -60,6 +60,14 @@ namespace test
 
 		public const String VARDESC = "Variable Identifier";
 
+		public const String VARCAST = "IS NOW A";
+		public const String EXPCAST = "MAEK";
+
+		public const String STARTFUNC = "HOW DUZ I";
+		public const String ENDFUNC = "IF YOU SAY SO";
+		public const String RETURN = "FOUND YR";
+		public const String CALLFUNC = "I IZ";
+
 		public const String NULL = "NOOB";
 		public const String NOTYPE = "Untyped";
 

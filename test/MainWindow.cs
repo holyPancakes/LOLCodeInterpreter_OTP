@@ -229,8 +229,8 @@ public partial class MainWindow: Gtk.Window
 				} else if (name == Constants.CASE || name == Constants.DEFAULT) {
 					if(fromWhere == Constants.STARTPROG) 
 						throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
-				}else
-					throw new WarningException(WarningMessage.unexpectedLexeme(name));
+				}/*else
+					throw new WarningException(WarningMessage.unexpectedLexeme(name));*/
 			}
 		}
 

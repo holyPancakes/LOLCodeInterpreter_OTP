@@ -158,6 +158,8 @@ namespace test
 				temp = new Lexeme(Constants.END_IF, "Ends if");
 			else if (token.Equals (Constants.NOTEQUAL))
 				temp = new Lexeme (Constants.NOTEQUAL, "Operator for not equal comparison");
+			else if (token.Equals (Constants.EXPCAST))
+				temp = new Lexeme (Constants.EXPCAST, "Typecasts an expression");
 			else if (token.StartsWith ("A")) {
 				if (token.Equals (Constants.MANY_AND))
 					temp = new Lexeme (Constants.MANY_AND, "AND Arity Operator");
@@ -241,11 +243,55 @@ namespace test
 					return;
 				}
 			}
+			else if (token.StartsWith ("F")) {
+				if (token.Equals (Constants.RETURN))
+					temp = new Lexeme (Constants.RETURN, "Returns value for functions");
+				else if(!token.EndsWith("OF") && !token.EndsWith("YR") && token.Contains(" ")){
+					string[] str = token.Split(delimiter);
+					temp = new Lexeme(str[0], Constants.VARDESC);
+					lex.Add(temp);
+					temp = new Lexeme ();
+					token = str [1];
+					checker (lex, c);
+					token = "";
+				}
+				else if(c == '\n')
+					temp = new Lexeme(token, Constants.VARDESC);
+				else {
+					token += c;
+					return;
+				}
+			}
+			else if (token.StartsWith ("H")) {
+				if (token.Equals (Constants.STARTFUNC))
+					temp = new Lexeme (Constants.STARTFUNC, "Starting delimiter for functions");
+				else if(!token.EndsWith("DUZ") && token.Contains(" ")){
+					string[] str = token.Split(delimiter);
+					temp = new Lexeme(str[0], Constants.VARDESC);
+					lex.Add(temp);
+					temp = new Lexeme ();
+					token = str [1];
+					checker (lex, c);
+					token = "";
+				}
+				else if(c == '\n')
+					temp = new Lexeme(token, Constants.VARDESC);
+				else {
+					token += c;
+					return;
+				}
+			}
 			else if(token.StartsWith("I")){ //checks if it is possibly a I HAS A keyword
 				if (token.Equals (Constants.VARDEC))
 					temp = new Lexeme(Constants.VARDEC, "Declares a variable.");
-				else if(!token.EndsWith("HAS") && token.Contains(" ")){
-					string[] str = token.Split(delimiter);
+				else if (token.Equals (Constants.VARCAST))
+					temp = new Lexeme(Constants.VARCAST, "Typecasts a variable.");
+				else if (token.Equals (Constants.ENDFUNC))
+					temp = new Lexeme(Constants.ENDFUNC, "Ends the functions");
+				else if (token.Equals (Constants.CALLFUNC))
+					temp = new Lexeme(Constants.CALLFUNC, "Calls the functions");
+				else if(!token.EndsWith("HAS") && !token.EndsWith("NOW") && !token.EndsWith("IZ") && !token.EndsWith("YOU") && !token.EndsWith("SAY") && token.Contains(" ")){
+					string[] str = token.Split(delimiter, 2);
 					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
 					temp = new Lexeme ();

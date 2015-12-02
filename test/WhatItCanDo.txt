@@ -7,6 +7,8 @@
 	IF YOU SAY SO - ends the function
 	FOUND YR [expression]- returns a value. Stored in IT if no variable will catch it
 	GTFO - returns NOOB
+
+	I IZ [arg1 [AN arg2 [AN ...]]] MKAY - calls the function
 5. Typecasting (MAEK, IS NOW A)
 	MAEK [expression] A [type]- changes an expression to a datatype
 	[variable name] IS NOW A [type] - changes the a variable to a datatype
