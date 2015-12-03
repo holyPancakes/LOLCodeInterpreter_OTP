@@ -133,8 +133,9 @@ public partial class MainWindow: Gtk.Window
 		else if(hasEnded) lineField.Buffer.Text = "Done!";
 	}
 
-	public void parse(ref int i, string fromWhere){
+	public string parse(ref int i, string fromWhere){
 		bool nextCommand = false;
+		bool broken = false;
 		char[] space = { ' ' };
 		string desc;
 		string name;
@@ -142,11 +143,10 @@ public partial class MainWindow: Gtk.Window
 		allTable.Add(new Dictionary<string, Value> ());
 		table = allTable [allTable.Count-1];
 
-		if (lexemeList.Count == 0)
-			return;
-
 		if (fromWhere == Constants.STARTPROG)
-			allTable[0].Add (Constants.IMPLICITVAR, new Value (Constants.NULL, Constants.NOTYPE));
+			allTable [0].Add (Constants.IMPLICITVAR, new Value (Constants.NULL, Constants.NOTYPE));
+		else if (fromWhere == Constants.STARTLOOP)
+			Console.WriteLine (lexemeList [i].getName ());
 
 		for(; i < lexemeList.Count; i++){
 			desc = lexemeList [i].getDescription ();
@@ -215,14 +215,24 @@ public partial class MainWindow: Gtk.Window
 					ifParse (ref i);
 					nextCommand = true;
 					i--;
+				} else if (name == Constants.STARTLOOP) {
+					loopParse (ref i);
+					nextCommand = true;
+					i--;
 				} else if (name == Constants.END_IF || 
 					name == Constants.BREAK || 
-					name == Constants.ELSE) {
+					name == Constants.ELSE ||
+					name == Constants.ENDLOOP) {
 					if (fromWhere == Constants.SWITCH &&
 						(name == Constants.END_IF || name == Constants.BREAK)) {
 						break;
 					} else if (fromWhere == Constants.IF && 
 						(name == Constants.END_IF || name == Constants.ELSE)) {
+						break;
+					} else if (fromWhere == Constants.STARTLOOP && 
+						(name == Constants.ENDLOOP || name == Constants.BREAK)) {
+						if (name == Constants.BREAK)
+							broken = true;
 						break;
 					} else 
 						throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
@@ -232,6 +242,7 @@ public partial class MainWindow: Gtk.Window
 				}/*else
 					throw new WarningException(WarningMessage.unexpectedLexeme(name));*/
 			}
+			UpdateTables();
 		}
 
 		if (allTable.Count > 1) {
@@ -239,6 +250,10 @@ public partial class MainWindow: Gtk.Window
 			table = allTable [allTable.Count - 1];
 		}
 		UpdateTables();
+
+		if (broken)
+			return Constants.BREAK;
+		else return "";
 	}
 
 	private void ifParse(ref int i){
@@ -271,6 +286,97 @@ public partial class MainWindow: Gtk.Window
 			return;
 		
 		parse (ref index, Constants.IF);
+	}
+
+	private void loopParse(ref int index){
+		string loopLabel;
+		string result;
+		string varname;
+
+		bool increment;
+		bool tilWIN;
+
+		int endLoop;
+		int tableIndex;
+		int condIndex;
+		int start;
+		int afterLoop = 0;
+
+		if (lexemeList [++index].getDescription () == Constants.VARDESC) {
+			loopLabel = lexemeList [index].getName ();
+		} else {
+			throw new SyntaxException(WarningMessage.unexpectedLexeme(lexemeList[index].getName()));
+		}
+		
+		if (lexemeList [++index].getName () == Constants.INC) {
+			increment = true;
+		} else if (lexemeList [index].getName () == Constants.DEC) {
+			increment = false;
+		} else {
+			throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [index].getName ()));
+		}
+
+		if (lexemeList [++index].getName () == Constants.YR) {
+			varname = lexemeList [++index].getName ();
+			string desc = lexemeList [index].getDescription ();
+			tableIndex = findVarName (varname);
+			if (desc != Constants.VARDESC)
+				throw new SyntaxException (WarningMessage.unexpectedLexeme (varname));
+			else if (tableIndex == -1)
+				throw new SyntaxException (WarningMessage.varNoDec (varname));
+			else if (allTable [tableIndex] [varname].getType () != Constants.INT)
+				throw new SyntaxException (WarningMessage.cannotConvert (allTable [tableIndex] [varname].getValue (), Constants.INT));
+		} else {
+			throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [index].getName ()));
+		}
+			
+		if (lexemeList [++index].getName () == Constants.LOOPCONDWIN) {
+			tilWIN = true;
+		} else if (lexemeList [index].getName () == Constants.LOOPCONDFAIL) {
+			tilWIN = false;
+		} else {
+			throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [index].getName ()));
+		}
+
+		condIndex = ++index;
+		if(lexemeList[index].getDescription().Contains("Operator")){
+			result = operatorList (lexemeList, ref index);
+			string type = returnType (result);
+			if (type != Constants.BOOL)
+				throw new SyntaxException (WarningMessage.cannotConvert (result, Constants.BOOL));
+		} else {
+			throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [index].getName ()));
+		}
+
+		if ((tilWIN && result == "WIN") || (!tilWIN && result == "FAIL")) {
+			for (; lexemeList [index].getName () != Constants.ENDLOOP; index++);
+			index++;
+			return;
+		}
+
+		while (lexemeList [index].getName () != Constants.ENDLOOP) {
+			if (lexemeList [index].getName () == Constants.EOL && afterLoop == 0)
+				afterLoop = index;
+			index++;
+		}
+
+		endLoop = index;
+		start = afterLoop;
+
+		while ((!tilWIN && result == "WIN") || (tilWIN && result == "FAIL")) {
+			parse (ref start, Constants.STARTLOOP);
+
+			Value val = allTable [tableIndex] [varname];
+			int value = int.Parse(val.getValue ());
+			if (increment) value++;
+			else value--;
+			allTable [tableIndex] [varname] = new Value (Convert.ToString (value), val.getType ());
+
+			start = condIndex;
+			result = operatorList (lexemeList, ref start);
+		}
+
+		index+=2;
 	}
 
 	private void switchParse(ref int i){
@@ -737,9 +843,9 @@ public partial class MainWindow: Gtk.Window
 						type = (val1.getType () == Constants.FLOAT || val2.getType () == Constants.FLOAT ||
 							(val1.getType () == Constants.STRING && val2.getType () == Constants.STRING)) ? Constants.FLOAT : Constants.INT;
 					}else
-						throw new SyntaxException(WarningMessage.cannotConvert(str2));
+						throw new SyntaxException(WarningMessage.cannotConvert(str2, Constants.INT + " or " + Constants.FLOAT));
 				} else
-					throw new SyntaxException(WarningMessage.cannotConvert(str1));
+					throw new SyntaxException(WarningMessage.cannotConvert(str1, Constants.INT + " or " + Constants.FLOAT));
 			}
 				
 

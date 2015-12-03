@@ -9,7 +9,8 @@ namespace test
 		}
 
 		public static String unexpectedLexeme(String name){
-			return "Unexpected " + name + " found!";
+			if(name == Constants.EOL) return "Unexpected end of line found!";
+			else return "Unexpected " + name + " found!";
 		}
 
 		public static String expectedLexeme(String name){
@@ -72,8 +73,8 @@ namespace test
 			return keyword + "can only accept " + type + " datatype!";
 		}
 
-		public static String cannotConvert(String name){
-			return "Cannot convert " + name + " to NUMBR or NUMBAR!";
+		public static String cannotConvert(String name, String type){
+			return "Cannot convert " + name + " to " + type + "!";
 		}
 
 		public static String noMKAY(){
