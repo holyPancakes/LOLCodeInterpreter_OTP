@@ -16,3 +16,9 @@
 /home/kintetsu/Desktop/lolcodeinterpreter_otp/test/obj/x86/Debug/test.exe.mdb
 /home/kintetsu/Desktop/lolcodeinterpreter_otp/test/bin/Debug/test.exe.mdb
 /home/kintetsu/Desktop/lolcodeinterpreter_otp/test/bin/Debug/test.exe
+/home/magical_banana/Desktop/LOLCodeInterpreter_OTP/test/obj/x86/Debug/.NETFramework,Version=v4.0.AssemblyAttribute.cs
+/home/magical_banana/Desktop/LOLCodeInterpreter_OTP/test/obj/x86/Debug/test.gtk-gui.gui.stetic
+/home/magical_banana/Desktop/LOLCodeInterpreter_OTP/test/bin/Debug/test.exe.mdb
+/home/magical_banana/Desktop/LOLCodeInterpreter_OTP/test/bin/Debug/test.exe
+/home/magical_banana/Desktop/LOLCodeInterpreter_OTP/test/obj/x86/Debug/test.exe
+/home/magical_banana/Desktop/LOLCodeInterpreter_OTP/test/obj/x86/Debug/test.exe.mdb

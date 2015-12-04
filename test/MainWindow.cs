@@ -207,6 +207,9 @@ public partial class MainWindow: Gtk.Window
 						allTable[0][Constants.IMPLICITVAR] = new Value (name, type [0]);
 					}
 					nextCommand = true;
+				} else if(desc.Contains("Typecasts")){
+					typeParse (ref i);
+					nextCommand = true;
 				} else if (name == Constants.SWITCH) {
 					switchParse (ref i);
 					nextCommand = true;
@@ -241,6 +244,145 @@ public partial class MainWindow: Gtk.Window
 		UpdateTables();
 	}
 
+	private void typeParse(ref int i){
+		string name = lexemeList [i].getName (); //holds MAEK or the first operator of IS NOW A
+		int ival; //int value result holder
+		double numbarval; //float value result holder
+		float fval;
+		string stval; //string value result holder
+		string troof; //boolean value result holder
+		string val; //value to be converted
+		string type; //new data type
+		string a; // A
+		int index;
+		string desc;
+		string result;
+		string checker;
+		int k;
+		//FUCCBOI
+		if (name.Equals (Constants.EXPCAST)) {
+			i++;
+			desc = lexemeList [i].getDescription ();
+			if (!desc.Contains ("Operator")) {
+				val = lexemeList [i].getName ();
+				index = findVarName (val);
+				checker = table [val].getValue ();
+				i++;
+				a = lexemeList [i].getName ();
+			} else {
+				val = "NOT A NOOB";
+				index = 69;
+				checker = "HEY";
+				a = "A";
+			}
+			i++;
+			for (k = i; lexemeList [k].getName () != Constants.EOL; k++)
+				;
+			type = lexemeList [k - 1].getName ();
+
+			if (checker == "NOOB") {
+				throw new SyntaxException (WarningMessage.varNoVal (val));
+			} else if (!a.Equals (Constants.A)) {
+				throw new SyntaxException (WarningMessage.unexpectedLexeme (a));
+			} else if (desc.Contains ("Operator")) {
+				i = i - 1;
+				result = operatorList (lexemeList, ref i);
+				i = i + 2;
+				if (type == Constants.INT) {
+					if (int.TryParse (result, out ival)) {
+						allTable [0] [Constants.IMPLICITVAR] = new Value (ival.ToString (), Constants.INT);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				} else if (type == Constants.FLOAT) {
+					if (float.TryParse (result, out fval)) {
+						allTable [0] [Constants.IMPLICITVAR] = new Value (fval.ToString (), Constants.FLOAT);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				} else if (type == Constants.STRING) {
+					allTable [0] [Constants.IMPLICITVAR] = new Value (result, Constants.STRING);
+				} else if (type == Constants.BOOL) {
+					if (Constants.BOOLVAL.Match (result).Success) {
+						allTable [0] [Constants.IMPLICITVAR] = new Value (result, Constants.BOOL);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				}
+			} else {
+				if (type == Constants.INT) {
+					if (Constants.INTVAL.Match (table [val].getValue ()).Success || Constants.FLOATVAL.Match (table [val].getValue ()).Success) {
+						if (Constants.INTVAL.Match (table [val].getValue ()).Success) {
+							ival = Int32.Parse (table [val].getValue ());
+						} else {
+							numbarval = double.Parse (table [val].getValue ());
+							ival = (int)Math.Round (numbarval);
+						}	
+						allTable [index] [val] = new Value (ival.ToString (), Constants.INT);					
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				} else if (type == Constants.FLOAT) {
+					if (Constants.FLOATVAL.Match (table [val].getValue ()).Success || Constants.INTVAL.Match (table [val].getValue ()).Success) {
+						numbarval = float.Parse (table [val].getValue ());	
+						allTable [index] [val] = new Value (numbarval.ToString (), Constants.FLOAT);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				} else if (type == Constants.STRING) {
+					stval = table [val].getValue ().ToString ();
+					allTable [index] [val] = new Value (stval, Constants.STRING);
+				} else if (type == Constants.BOOL) {
+					if (Constants.BOOLVAL.Match (table [val].getValue ()).Success) {
+						troof = table [val].getValue ().ToString ();
+						allTable [index] [val] = new Value (troof, Constants.BOOL);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				}
+			}
+		} else if (name.Equals (Constants.VARCAST)) {
+			val = lexemeList [i - 1].getName ();
+			i++;
+			type = lexemeList [i].getName ();
+			index = findVarName (val);
+	
+			if (table [val].getValue () == "NOOB") {
+				throw new SyntaxException (WarningMessage.varNoVal (val));
+			} else {
+				if (type == Constants.INT) {
+					if (Constants.INTVAL.Match (table [val].getValue ()).Success || Constants.FLOATVAL.Match (table [val].getValue ()).Success) {
+						if (Constants.INTVAL.Match (table [val].getValue ()).Success) {
+							ival = Int32.Parse (table [val].getValue ());
+						} else {
+							numbarval = double.Parse (table [val].getValue ());
+							ival = (int)Math.Round (numbarval);
+						}	
+						allTable [index] [val] = new Value (ival.ToString (), Constants.INT);					
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				} else if (type == Constants.FLOAT) {
+					if (Constants.FLOATVAL.Match (table [val].getValue ()).Success || Constants.INTVAL.Match (table [val].getValue ()).Success) {
+						numbarval = float.Parse (table [val].getValue ());	
+						allTable [index] [val] = new Value (numbarval.ToString (), Constants.FLOAT);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				} else if (type == Constants.STRING) {
+					stval = table [val].getValue ().ToString ();
+					allTable [index] [val] = new Value (stval, Constants.STRING);
+				} else if (type == Constants.BOOL) {
+					if (Constants.BOOLVAL.Match (table [val].getValue ()).Success) {
+						troof = table [val].getValue ().ToString ();
+						allTable [index] [val] = new Value (troof, Constants.BOOL);
+					} else {
+						throw new SyntaxException (WarningMessage.noConverto (val, type));
+					}
+				}
+			}
+		}
+	}
 	private void ifParse(ref int i){
 		int elseindex = 0;
 		int ifIndex = 0;
@@ -622,7 +764,9 @@ public partial class MainWindow: Gtk.Window
 		for (; !desc.Contains("break"); index++,
 		     name = lexemeList [index].getName (),
 		     desc = lexemeList [index].getDescription ()) {
-
+			if (name == Constants.A) {
+				break;
+			}
 			if (desc.Contains ("comment")) {
 				continue;
 			} else if (name == Constants.AN) {
