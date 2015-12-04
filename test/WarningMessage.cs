@@ -45,6 +45,14 @@ namespace test
 			return "Variable Identifier " + varname + " is already declared!";
 		}
 
+		public static String varNoVal(String varname){
+			return "Variable Identifier " + varname + " has no value and can't be converted!";
+		}
+			
+		public static String noConverto(String varname,String type){
+			return "Variable Identifier " + varname + " can't be converted to " + type + "!";
+		}
+
 		public static String notPrintable(String toPrint){
 			return toPrint + " is not printable!";
 		}
