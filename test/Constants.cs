@@ -65,7 +65,7 @@ namespace test
 		public const String VARCAST = "IS NOW A";
 		public const String EXPCAST = "MAEK";
 
-		public const String STARTFUNC = "HOW DUZ I";
+		public const String STARTFUNC = "HOW IZ I";
 		public const String ENDFUNC = "IF U SAY SO";
 		public const String RETURN = "FOUND YR";
 		public const String CALLFUNC = "I IZ";

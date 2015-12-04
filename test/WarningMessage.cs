@@ -84,6 +84,14 @@ namespace test
 		public static String noIF(){
 			return "Started Condition without " + Constants.IF;
 		}
+
+		public static String reachedMaxValue(){
+			return "Loop continued indefinitely. Stopping because counter reached max value.";
+		}
+
+		public static String cannotNull(){
+			return "Cannot print uninitialized variables!";
+		}
 	}
 }
 

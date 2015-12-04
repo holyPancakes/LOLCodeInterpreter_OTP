@@ -10,14 +10,16 @@ using System.Text.RegularExpressions;
 
 public partial class MainWindow: Gtk.Window
 {	
+	private List<Dictionary<String, Value>> allTable;
 	private List<Lexeme> lexemeList = new List<Lexeme>();
 	private Stack<Value> stack = new Stack<Value> ();
 	private Stack<Value> stackArity = new Stack<Value>();
+	private Dictionary<String, Value> table;
 
-	private List<Dictionary<String, Value>> allTable = new List<Dictionary<String, Value>>(); //symbol table
-	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
-	private Boolean hasStarted; //checks if the program already started using HAI
+	private Boolean hasEnded;
+	private Boolean hasStarted;
 	private Boolean hasError;
+
 	private Gtk.ListStore tokensListStore;
 	private Gtk.ListStore symbolTableListStore;
 
@@ -82,14 +84,16 @@ public partial class MainWindow: Gtk.Window
 		outputField.ModifyBase(StateType.Normal, new Gdk.Color(0x00, 0x00, 0x00));
 		outputField.ModifyText(StateType.Normal, new Gdk.Color(0xFF, 0xFF, 0xFF));
 		sourceText.GrabFocus ();
+
+		allTable = new List<Dictionary<String, Value>>();
 	}
 
 	public void Interpret(){
 		LexemeCreator lexer = new LexemeCreator(); //for lexical analysis
-		string sourceString = sourceText.Buffer.Text;
-		string[] sourceLines = sourceString.Split (delimeter);
 		char[] delimeter = {'\n'};
 		int i = 0;
+		string sourceString = sourceText.Buffer.Text;
+		string[] sourceLines = sourceString.Split (delimeter);
 
 		outputField.Buffer.Text = "";
 
@@ -128,7 +132,6 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	public string parse(ref int i, string fromWhere){
-		Dictionary<String, Value> table;
 		bool nextCommand = false;
 		bool broken = false;
 		char[] space = { ' ' };
@@ -434,6 +437,8 @@ public partial class MainWindow: Gtk.Window
 				if (index == -1)
 					throw new SyntaxException (WarningMessage.varNoDec (name));
 				Value val = allTable[index][name];
+				if (val.getValue () == Constants.NULL)
+					throw new SyntaxException (WarningMessage.cannotNull);
 				toWrite = val.getValue () + "\n";
 				i++;
 			} else if (desc.Contains ("Operator")) {
