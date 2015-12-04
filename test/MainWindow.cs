@@ -10,13 +10,11 @@ using System.Text.RegularExpressions;
 
 public partial class MainWindow: Gtk.Window
 {	
-	private LexemeCreator lexer = new LexemeCreator(); //for lexical analysis
 	private List<Lexeme> lexemeList = new List<Lexeme>();
 	private Stack<Value> stack = new Stack<Value> ();
 	private Stack<Value> stackArity = new Stack<Value>();
 
 	private List<Dictionary<String, Value>> allTable = new List<Dictionary<String, Value>>(); //symbol table
-	private Dictionary<String, Value> table;
 	private Boolean hasEnded; //checks if the program already ended using KTHXBYE
 	private Boolean hasStarted; //checks if the program already started using HAI
 	private Boolean hasError;
@@ -24,8 +22,6 @@ public partial class MainWindow: Gtk.Window
 	private Gtk.ListStore symbolTableListStore;
 
 	private TextView inputTextView;
-
-	private int lineNo;
 
 	public MainWindow (): base (Gtk.WindowType.Toplevel){
 		Build ();
@@ -89,11 +85,14 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	public void Interpret(){
+		LexemeCreator lexer = new LexemeCreator(); //for lexical analysis
+		string sourceString = sourceText.Buffer.Text;
+		string[] sourceLines = sourceString.Split (delimeter);
 		char[] delimeter = {'\n'};
+		int i = 0;
 
 		outputField.Buffer.Text = "";
 
-		lineNo = 0;
 		hasStarted = false;
 		hasEnded = false;
 		hasError = false;
@@ -104,36 +103,32 @@ public partial class MainWindow: Gtk.Window
 		allTable.Clear ();
 		stack.Clear ();
 		stackArity.Clear ();
-		lexer.reset ();
 
 		Console.WriteLine (sourceText.Buffer.Text);
 		Console.WriteLine ("==========");
-
-		string sourceString = sourceText.Buffer.Text;
-		string[] sourceLines = sourceString.Split (delimeter);
-		int junk = 0;
+		
 		try {
 			lineField.Buffer.Text = "Creating Lexemes...";
-			lexemeList = lexer.process (sourceLines, ref lineNo); //creates an array of lexemes
-			lineNo = 0;
+			lexemeList = lexer.process (sourceLines);
 			UpdateLexemes(lexemeList);
 			lineField.Buffer.Text = "Running the Lexemes...";
-			parse (ref junk, Constants.STARTPROG); //parses the lexemes
-		} catch (SyntaxException e) { //if something went wrong, prints the error on screen
+			parse (ref i, Constants.STARTPROG);
+		} catch (SyntaxException e) {
 			hasError = true;
-			outputField.Buffer.Text += "\n" + "ERROR on line " + (lineNo+1) + ": " + e.Message+ "\n" + e.StackTrace+ "\n";
-			Console.WriteLine ("\n" + "ERROR on line " + (lineNo + 1) + ": " + e.Message + "\n" + e.StackTrace + "\n");
+			outputField.Buffer.Text += "\n" + "ERROR: " + e.Message+ "\n" + e.StackTrace+ "\n";
+			Console.WriteLine ("\n" + "ERROR: " + e.Message + "\n" + e.StackTrace + "\n");
 			return;
 		} catch (Exception e){
-			outputField.Buffer.Text += "\n" + "CRASHED on line " + (lineNo+1) + ": " + e.Message + "\n" + e.StackTrace+ "\n";
-			Console.WriteLine ("\n" + "CRASHED on line " + (lineNo + 1) + ": " + e.Message + "\n" + e.StackTrace + "\n");
+			outputField.Buffer.Text += "\n" + "CRASHED: " + e.Message + "\n" + e.StackTrace+ "\n";
+			Console.WriteLine ("\n" + "CRASHED: " + e.Message + "\n" + e.StackTrace + "\n");
 			return;
 		}
-		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR on line " + sourceLines.Length + ": Reach end of file. Did not found " + Constants.ENDPROG + "\n";
+		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR: Reach end of file. Did not found " + Constants.ENDPROG + "\n";
 		else if(hasEnded) lineField.Buffer.Text = "Done!";
 	}
 
 	public string parse(ref int i, string fromWhere){
+		Dictionary<String, Value> table;
 		bool nextCommand = false;
 		bool broken = false;
 		char[] space = { ' ' };
@@ -145,8 +140,6 @@ public partial class MainWindow: Gtk.Window
 
 		if (fromWhere == Constants.STARTPROG)
 			allTable [0].Add (Constants.IMPLICITVAR, new Value (Constants.NULL, Constants.NOTYPE));
-		else if (fromWhere == Constants.STARTLOOP)
-			Console.WriteLine (lexemeList [i].getName ());
 
 		for(; i < lexemeList.Count; i++){
 			desc = lexemeList [i].getDescription ();
@@ -158,7 +151,6 @@ public partial class MainWindow: Gtk.Window
 				}
 			} else if (desc.Contains ("break")) {
 				nextCommand = false;
-				if(name == Constants.EOL) lineNo++;
 			} else if (nextCommand) {
 				throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
 			}else if (name == Constants.STARTPROG) {
@@ -170,21 +162,21 @@ public partial class MainWindow: Gtk.Window
 			else if(hasEnded)
 				throw new SyntaxException(WarningMessage.alreadyEnd());
 			else{
-				if (name == Constants.PRINT) { //checks if the keyword is VISIBLE
+				if (name == Constants.PRINT) {
 					printParse (ref i);
 					nextCommand = true;
 				} else if (name == Constants.SCAN) {
 					scanParse (ref i);
 					nextCommand = true;
-				} else if (name == Constants.VARDEC) { //checks if the keyword is I HAS A
+				} else if (name == Constants.VARDEC) {
 					varDecParse (ref i);
 					nextCommand = true;
-				} else if (name == Constants.ASSIGN) { //checks if the keyword is R
+				} else if (name == Constants.ASSIGN) {
 					assignParse (ref i);
 					nextCommand = true;
-				} else if (desc == Constants.VARDESC) { //checks if the keyword is a Variable Description
+				} else if (desc == Constants.VARDESC) {
 					int index = findVarName(name);
-					if (index == -1) //check if the variable is already declared
+					if (index == -1)
 						throw new SyntaxException (WarningMessage.varNoDec (name));
 					else if (lexemeList [i + 1].getName () == Constants.ASSIGN || lexemeList [i + 1].getName () == Constants.VARCAST)
 						continue;
@@ -192,7 +184,7 @@ public partial class MainWindow: Gtk.Window
 						allTable[0][Constants.IMPLICITVAR] = allTable[index][name];
 						nextCommand = true;
 					}
-				} else if (name == Constants.ENDPROG) { //checks if the keyword is KTHXBYE
+				} else if (name == Constants.ENDPROG) {
 					hasEnded = true;
 					nextCommand = true;
 				} else if (desc.Contains ("Operator")) {
@@ -239,8 +231,8 @@ public partial class MainWindow: Gtk.Window
 				} else if (name == Constants.CASE || name == Constants.DEFAULT) {
 					if(fromWhere == Constants.STARTPROG) 
 						throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
-				}/*else
-					throw new WarningException(WarningMessage.unexpectedLexeme(name));*/
+				}else
+					throw new WarningException(WarningMessage.unexpectedLexeme(name));
 			}
 			UpdateTables();
 		}
@@ -296,7 +288,6 @@ public partial class MainWindow: Gtk.Window
 		bool increment;
 		bool tilWIN;
 
-		int endLoop;
 		int tableIndex;
 		int condIndex;
 		int start;
@@ -348,28 +339,25 @@ public partial class MainWindow: Gtk.Window
 			throw new SyntaxException (WarningMessage.unexpectedLexeme (lexemeList [index].getName ()));
 		}
 
-		if ((tilWIN && result == "WIN") || (!tilWIN && result == "FAIL")) {
-			for (; lexemeList [index].getName () != Constants.ENDLOOP; index++);
-			index++;
-			return;
-		}
-
 		while (lexemeList [index].getName () != Constants.ENDLOOP) {
 			if (lexemeList [index].getName () == Constants.EOL && afterLoop == 0)
 				afterLoop = index;
 			index++;
 		}
 
-		endLoop = index;
-		start = afterLoop;
+		if(lexemeList[index+1].getName() != loopLabel)
+			throw new SyntaxException(WarningMessage.unexpectedLexeme(lexemeList[index+1].getName()));
 
-		while ((!tilWIN && result == "WIN") || (tilWIN && result == "FAIL")) {
+		start = afterLoop;
+		while ((tilWIN && result == "FAIL") || (!tilWIN && result == "WIN")) {
 			parse (ref start, Constants.STARTLOOP);
 
 			Value val = allTable [tableIndex] [varname];
-			int value = int.Parse(val.getValue ());
-			if (increment) value++;
-			else value--;
+			int value = int.Parse (val.getValue ());
+			if (increment)
+				value++;
+			else
+				value--;
 			allTable [tableIndex] [varname] = new Value (Convert.ToString (value), val.getType ());
 
 			start = condIndex;
@@ -768,8 +756,6 @@ public partial class MainWindow: Gtk.Window
 		Value op = null;
 		String result = "";
 
-		//SUM OF PRODUKT OF DIFF OF 5 AN 2 AN MOD OF 8 AN 5 AN PRODUKT OF DIFF OF 5 AN 2 AN MOD OF 8 AN 5 BTW COMPLICATED SHIT
-
 		while(stack.Count > 1){
 			try{
 				val.Add(stack.Pop());
@@ -1069,7 +1055,7 @@ public partial class MainWindow: Gtk.Window
 		filechooser.Filter = new FileFilter ();
 		filechooser.Filter.Name = "LOLCODE";
 		filechooser.Filter.AddPattern("*.lol");
-		//"LOLCode Files (.lol)|*.lol|All Files (*.*)|*.*";
+		filechooser.SetCurrentFolder ("./../../../");
 		filechooser.SelectMultiple = false;
 
 		if (filechooser.Run() == (int)ResponseType.Accept) 
