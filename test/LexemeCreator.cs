@@ -13,26 +13,22 @@ namespace test
 		private String str;
 		private String token;
 
-		public LexemeCreator ()
-		{
+		public LexemeCreator (){
 			quotedDouble = false;
 			isComment = false;
 			oneLineComment = false;
 		}
 
-		public List<Lexeme> process(String[] lines, ref int i)
-		{ //processes a string
-			
+		public List<Lexeme> process(String[] lines){
 			List<Lexeme> lex = new List<Lexeme>();
 
-			i = -1;
 			foreach (String line in lines) {
-				foreach (char c in line) { //converts it to array of characters
+				foreach (char c in line) {
 					if (c == '\t')
-						continue; //ignore if it is a tab
-					else if ((c == ' ' || c == Constants.SOFTBREAKCHAR) && !quotedDouble) { //checks if the character is space and not quoted
+						continue;
+					else if ((c == ' ' || c == Constants.SOFTBREAKCHAR) && !quotedDouble) {
 						if ((token.EndsWith (" ") || token.Length == 0) && c == ' ')
-							continue; //ignore if it is a space
+							continue;
 						else if (token.Equals (Constants.ONELINE)) {
 							if (!isComment) {
 								Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
@@ -56,29 +52,29 @@ namespace test
 						} else if (isComment || oneLineComment)
 							token = "";
 						else
-							checker (lex, c); //else checks the token if it is a keyword or a value
+							checker (lex, c); 
 						if(c == Constants.SOFTBREAKCHAR)
 							lex.Add(new Lexeme(Constants.SOFTBREAK, "Soft-command break"));
-					} else if (c == '\"') { //checks if the char is a double quotes
+					} else if (c == '\"') {
 						if (isComment || oneLineComment)
 							continue;
-						quotedDouble = !quotedDouble; //switches the flags of double quotes
-						if (!quotedDouble) { //if the double quote becomes false
+						quotedDouble = !quotedDouble;
+						if (!quotedDouble) {
 							Lexeme temp = new Lexeme (str, Constants.STRING + " constant"); //creates a lexeme
-							lex.Add (temp); //adds the lexeme to an array of lexemes
+							lex.Add (temp);
 							lex.Add (new Lexeme ("\"", "YARN Delimiter"));
-							str = ""; //resets the string
+							str = "";
 						} else{
 							lex.Add (new Lexeme ("\"", "YARN Delimiter"));
 						}
 					} else if (quotedDouble){
-						str += c; //append the char to string
+						str += c;
 					} else{
-						token += c;//appends the char to token otherwise
+						token += c;
 					}
 				}
 
-				if (quotedDouble) //checks if the string is properly closed
+				if (quotedDouble)
 					throw new SyntaxException (WarningMessage.lackDoubleQuote ());
 				if (token.Equals (Constants.ONELINE)) {
 					Lexeme temp = new Lexeme (Constants.ONELINE, "One line comment");
@@ -101,22 +97,20 @@ namespace test
 				} else if (isComment || oneLineComment)
 					token = "";
 				else
-					checker (lex, '\n'); //checks the token of it is not yet empty
+					checker (lex, '\n');
 
-				if (token.Length != 0) { //checks if the token is not a keyword and found dangling in the code
+				if (token.Length != 0) {
 					throw new SyntaxException (WarningMessage.unexpectedLexeme (token));
 				}
 
-				i++;
 				oneLineComment = false;
 				lex.Add(new Lexeme(Constants.EOL, "Hard-command break"));
 			}
 
-			return lex; //returns the array of lexemes
+			return lex;
 		}
 
-		private void checker(List<Lexeme> lex, char c)
-		{ //checks the token if it is a keyword or a value
+		private void checker(List<Lexeme> lex, char c){
 			Lexeme temp = new Lexeme();
 			char[] delimiter = { ' ' };
 
@@ -162,6 +156,16 @@ namespace test
 				temp = new Lexeme (Constants.EXPCAST, "Typecasts an expression");
 			else if (token.Equals (Constants.A))
 				temp = new Lexeme (Constants.A, "For " + Constants.EXPCAST);
+			else if (token.Equals (Constants.YR))
+				temp = new Lexeme (Constants.YR, "Separates the arguments");
+			else if (token.Equals (Constants.INC))
+				temp = new Lexeme (Constants.INC, "Increments a variable");
+			else if (token.Equals (Constants.DEC))
+				temp = new Lexeme (Constants.DEC, "Decrements a variable");
+			else if (token.Equals (Constants.LOOPCONDFAIL))
+				temp = new Lexeme (Constants.LOOPCONDFAIL, "Loops until FAIL");
+			else if (token.Equals (Constants.LOOPCONDWIN))
+				temp = new Lexeme (Constants.LOOPCONDWIN, "Loops until WIN");
 			else if (token.StartsWith ("A")) {
 				if (token.Equals (Constants.MANY_AND))
 					temp = new Lexeme (Constants.MANY_AND, "AND Arity Operator");
@@ -283,7 +287,7 @@ namespace test
 					return;
 				}
 			}
-			else if(token.StartsWith("I")){ //checks if it is possibly a I HAS A keyword
+			else if(token.StartsWith("I")){
 				if (token.Equals (Constants.VARDEC))
 					temp = new Lexeme(Constants.VARDEC, "Declares a variable.");
 				else if (token.Equals (Constants.VARCAST))
@@ -292,7 +296,19 @@ namespace test
 					temp = new Lexeme(Constants.ENDFUNC, "Ends the functions");
 				else if (token.Equals (Constants.CALLFUNC))
 					temp = new Lexeme(Constants.CALLFUNC, "Calls the functions");
-				else if(!token.EndsWith("HAS") && !token.EndsWith("NOW") && !token.EndsWith("IZ") && !token.EndsWith("YOU") && !token.EndsWith("SAY") && token.Contains(" ")){
+				else if (token.Equals (Constants.STARTLOOP))
+					temp = new Lexeme(Constants.STARTLOOP, "Starts the loop");
+				else if (token.Equals (Constants.ENDLOOP))
+					temp = new Lexeme(Constants.ENDLOOP, "Ends the loop");
+				else if(!token.EndsWith("HAS") && 
+					!token.EndsWith("NOW") && 
+					!token.EndsWith("IN") && 
+					!token.EndsWith("OUTTA") && 
+					!token.EndsWith("IZ") && 
+					!token.EndsWith("U") && 
+					!token.EndsWith("SAY") && 
+					token.Contains(" ")
+				){
 					string[] str = token.Split(delimiter, 2);
 					temp = new Lexeme(str[0], Constants.VARDESC);
 					lex.Add(temp);
@@ -473,13 +489,6 @@ namespace test
 				lex.Add(temp);
 				token = "";
 			}
-		}
-
-		public void reset()
-		{ //resets the attributes of scanner
-			quotedDouble = false;
-			str = "";
-			token = "";
 		}
 	}
 }
