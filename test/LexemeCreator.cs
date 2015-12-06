@@ -17,6 +17,8 @@ namespace test
 			quotedDouble = false;
 			isComment = false;
 			oneLineComment = false;
+			str = "";
+			token = "";
 		}
 
 		public List<Lexeme> process(String[] lines){
@@ -24,8 +26,10 @@ namespace test
 
 			foreach (String line in lines) {
 				foreach (char c in line) {
-					if (c == '\t')
+					if (c == '\t' && !quotedDouble)
 						continue;
+					else if (c == '!' && !quotedDouble)
+						lex.Add(new Lexeme(Constants.NONEWLINE, "Makes " + Constants.PRINT + " print with no new line."));
 					else if ((c == ' ' || c == Constants.SOFTBREAKCHAR) && !quotedDouble) {
 						if ((token.EndsWith (" ") || token.Length == 0) && c == ' ')
 							continue;
@@ -58,6 +62,10 @@ namespace test
 					} else if (c == '\"') {
 						if (isComment || oneLineComment)
 							continue;
+						else if (str.EndsWith (":")) {
+							str += c;
+							continue;
+						}
 						quotedDouble = !quotedDouble;
 						if (!quotedDouble) {
 							Lexeme temp = new Lexeme (str, Constants.STRING + " constant"); //creates a lexeme

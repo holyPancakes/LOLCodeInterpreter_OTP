@@ -100,6 +100,10 @@ namespace test
 		public static String cannotNull(){
 			return "Cannot print uninitialized variables!";
 		}
+
+		public static String unrecognizedEscChar(String str){
+			return "Cannot convert this " + str + "!";
+		}
 	}
 }
 

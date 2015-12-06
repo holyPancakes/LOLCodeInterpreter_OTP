@@ -1,13 +1,18 @@
 HAI
-I HAS A VAR ITZ 5
+	BTW we're going to look at some escape sequences
+	I HAS A VAR ITZ 12
+	BTW interpolation
+	I HAS A STR ITZ "MY VAR IS :{VAR}"
+	VISIBLE STR
+	BTW unicode
+	VISIBLE "---"
+	VISIBLE "I LIKE :(03C0)"
 
-BOTH SAEM VAR AN 5, O RLY?
-YA RLY
-	I HAS A X ITZ 2
-	VAR R X
-	BOTH SAEM X AN VAR, O RLY?
-	YA RLY
-		VISIBLE X
-	OIC
-OIC
+	BTW escaping works by the : character.
+	BTW escaping a quote:
+	VISIBLE "---"
+	VISIBLE "I SAID :"hello:" to him"
+	BTW escaping newlines, and tabs
+	VISIBLE "---"
+	VISIBLE "I SAID:):>:"hello:":)to him"
 KTHXBYE

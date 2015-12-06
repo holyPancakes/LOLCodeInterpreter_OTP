@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Media;
 
 
 public partial class MainWindow: Gtk.Window
@@ -114,6 +115,7 @@ public partial class MainWindow: Gtk.Window
 		try {
 			lineField.Buffer.Text = "Creating Lexemes...";
 			lexemeList = lexer.process (sourceLines);
+			processLexemes();
 			UpdateLexemes(lexemeList);
 			lineField.Buffer.Text = "Running the Lexemes...";
 			parse (ref i, Constants.STARTPROG);
@@ -129,6 +131,17 @@ public partial class MainWindow: Gtk.Window
 		}
 		if(!hasEnded && !hasError) outputField.Buffer.Text += "\n" + "ERROR: Reach end of file. Did not found " + Constants.ENDPROG + "\n";
 		else if(hasEnded) lineField.Buffer.Text = "Done!";
+	}
+
+	public void processLexemes(){
+		for (int i = 0; i < lexemeList.Count; i++) {
+			string name = lexemeList [i].getName ();
+			if (name.Contains ("\t"))
+				lexemeList [i] = new Lexeme (
+					name.Replace ("\t", ":>"),
+					lexemeList [i].getDescription ()
+				);
+		}
 	}
 
 	public string parse(ref int i, string fromWhere){
@@ -589,14 +602,42 @@ public partial class MainWindow: Gtk.Window
 				toWrite = operatorList (lexemeList, ref i);
 			} else
 				throw new SyntaxException (WarningMessage.notPrintable (name));
-			toWrite = putEscChar (toWrite);
-			outputField.Buffer.Text += toWrite;
+			printString(toWrite, ref i);
 		} else
 			throw new SyntaxException (WarningMessage.noArguments (Constants.PRINT));
+
+		if (lexemeList [i + 1].getName () != Constants.NONEWLINE) {
+			outputField.Buffer.Text += "\n";
+		} else
+			i++;
 	}
 
-	private string putEscChar(string print){
-		Dictionary<String, String> escapeChar = new Dictionary<string, string> () {
+	private void printString(string print, ref int i){
+		bool escFound = false;
+		string esc = "";
+
+		foreach (char c in print) {
+			if (escFound) {
+				esc += c;
+				if (processEsc (esc)) {
+					escFound = false;
+					esc = "";
+				}
+			} else if (c == ':') {
+				esc += c;
+				escFound = true;
+			} else
+				outputField.Buffer.Text += c;
+		}
+
+		if (escFound) {
+			if (!processEsc (esc))
+				throw new SyntaxException (WarningMessage.unrecognizedEscChar (esc));
+		}
+	}
+
+	private bool processEsc(string esc){
+		Dictionary<string, string> lol2C = new Dictionary<string, string> () {
 			{ ":)", "\n" },
 			{ ":>", "\t" },
 			{ ":O", "" },
@@ -604,26 +645,37 @@ public partial class MainWindow: Gtk.Window
 			{ "::", ":" }
 		};
 
-		while (print.IndexOf (":") != -1) {
-			string substr = "";
-			for (int i = print.IndexOf (":")-1; i < print.Length; i++) {
-				if (print.ToCharArray () [i] == ' ')
-					break;
-				substr += print.ToCharArray () [i];
-			}
+		Regex hex = new Regex ("^:\\([0-9A-Fa-f]+\\)$", RegexOptions.Compiled);
+		Regex varPrint = new Regex ("^:{[A-Za-z][A-Za-z0-9_]*}$");
 
-			Console.WriteLine ("Substring: " + substr);
+		string hexCode = "";
+		string varname = "";
 
-			if(escapeChar.ContainsKey(substr)){
-				Console.WriteLine ("contains!");
-				print = print.Replace(substr, escapeChar[substr]);
-			}
+		if (lol2C.ContainsKey (esc)) {
+			outputField.Buffer.Text += lol2C [esc];
+			return true;
+		} else if (hex.IsMatch (esc)) {
+			hexCode = esc.Replace (":(", "");
+			hexCode = hexCode.Replace (")", "");
 
-			Console.WriteLine (print);
-			break;
+			char ch = (char)Convert.ToInt32 (hexCode, 16);
+			outputField.Buffer.Text += ch.ToString ();
+			return true;
+		} else if (varPrint.IsMatch (esc)) {
+			varname = esc.Replace (":{", "");
+			varname = varname.Replace ("}", "");
+
+			Console.WriteLine (varname);
+
+			int i = findVarName (varname);
+			if (i == -1)
+				throw new SyntaxException (WarningMessage.varNoDec (varname));
+
+			outputField.Buffer.Text += allTable [i] [varname].getValue ();
+			return true;
 		}
 
-		return print;
+		return false;
 	}
 
 	private void scanParse(ref int i){
@@ -1201,6 +1253,8 @@ public partial class MainWindow: Gtk.Window
 		foreach(Dictionary<string, Value> t in allTable){
 			foreach (string key in t.Keys) {
 				Value val = t [key];
+				if (val.getValue ().Contains ("\t"))
+					val = t [key] = new Value (val.getValue ().Replace ("\t", ":>"), val.getType ());
 				symbolTableListStore.AppendValues (key, val.getValue (), val.getType ());
 			}
 		}

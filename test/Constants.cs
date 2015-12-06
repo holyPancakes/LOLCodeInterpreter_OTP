@@ -89,6 +89,8 @@ namespace test
 		public const String TRUE = "WIN";
 		public const String FALSE = "FAIL";
 
+		public const String NONEWLINE = "!";
+
 		public static Regex VARIDENT = new Regex (varIdent, RegexOptions.Compiled);
 		public static Regex INTVAL = new Regex (numbr, RegexOptions.Compiled);
 		public static Regex FLOATVAL = new Regex (numbar, RegexOptions.Compiled);

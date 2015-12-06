@@ -187,7 +187,6 @@
                             <property name="CanFocus">True</property>
                             <property name="ShowScrollbars">True</property>
                             <property name="Text" translatable="yes" />
-                            <signal name="KeyPressEvent" handler="runProgramButton" after="yes" />
                           </widget>
                         </child>
                       </widget>
