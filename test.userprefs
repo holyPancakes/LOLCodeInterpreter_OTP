@@ -3,6 +3,8 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="test/Program.cs">
     <Files>
       <File FileName="test/Program.cs" Line="17" Column="1" />
+      <File FileName="test/MainWindow.cs" Line="1423" Column="15" />
+      <File FileName="test/Constants.cs" Line="73" Column="30" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
