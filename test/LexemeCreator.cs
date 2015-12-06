@@ -28,9 +28,7 @@ namespace test
 				foreach (char c in line) {
 					if (c == '\t' && !quotedDouble)
 						continue;
-					else if (c == '!' && !quotedDouble)
-						lex.Add(new Lexeme(Constants.NONEWLINE, "Makes " + Constants.PRINT + " print with no new line."));
-					else if ((c == ' ' || c == Constants.SOFTBREAKCHAR) && !quotedDouble) {
+					else if ((c == ' ' || c == Constants.SOFTBREAKCHAR || c == '!') && !quotedDouble) {
 						if ((token.EndsWith (" ") || token.Length == 0) && c == ' ')
 							continue;
 						else if (token.Equals (Constants.ONELINE)) {
@@ -56,7 +54,9 @@ namespace test
 						} else if (isComment || oneLineComment)
 							token = "";
 						else
-							checker (lex, c); 
+							checker (lex, c);
+						if (c == '!')
+							lex.Add(new Lexeme(Constants.NONEWLINE, "Makes " + Constants.PRINT + " print with no new line."));
 						if(c == Constants.SOFTBREAKCHAR)
 							lex.Add(new Lexeme(Constants.SOFTBREAK, "Soft-command break"));
 					} else if (c == '\"') {

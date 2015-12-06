@@ -575,41 +575,48 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	private void printParse(ref int i){
-		string name = lexemeList [i+1].getName ();
-		string desc = lexemeList [i+1].getDescription ();
-		string toWrite;
+		Console.WriteLine ("Entered at: " + lexemeList[i+1].getName());
+		if (lexemeList [i + 1].getDescription ().Contains ("break") || lexemeList [i + 1].getName () == Constants.NONEWLINE)
+			throw new SyntaxException (WarningMessage.lackOperands (Constants.PRINT));
+		
+		for (i++; !lexemeList [i].getDescription ().Contains ("break") && lexemeList [i].getName () != Constants.NONEWLINE; i++) {
+			string name = lexemeList [i].getName ();
+			string desc = lexemeList [i].getDescription ();
+			string toWrite;
 
-		if (desc.Contains("constant") || desc.Contains("Operator") ||
-			desc == Constants.VARDESC || name == "\"") {
-			if (name == "\"") {
-				Lexeme yarn = lexemeList [i + 2];
-				toWrite = yarn.getName ();
-				i += 3;
-			} else if (desc.Contains("constant")) {
-				toWrite = name;
-				i++;
-			} else if (desc == Constants.VARDESC) {
-				int index = findVarName (name);
-				if (index == -1)
-					throw new SyntaxException (WarningMessage.varNoDec (name));
-				Value val = allTable[index][name];
-				if (val.getValue () == Constants.NULL)
-					throw new SyntaxException (WarningMessage.cannotNull());
-				toWrite = val.getValue ();
-				i++;
-			} else if (desc.Contains ("Operator")) {
-				i++;
-				toWrite = operatorList (lexemeList, ref i);
-			} else
-				throw new SyntaxException (WarningMessage.notPrintable (name));
-			printString(toWrite, ref i);
-		} else
-			throw new SyntaxException (WarningMessage.noArguments (Constants.PRINT));
+			if (desc.Contains ("constant") || desc.Contains ("Operator") ||
+			    desc == Constants.VARDESC || name == "\"") {
+				if (name == "\"") {
+					Lexeme yarn = lexemeList [i + 1];
+					toWrite = yarn.getName ();
+					i += 2;
+				} else if (desc.Contains ("constant")) {
+					toWrite = name;
+				} else if (desc == Constants.VARDESC) {
+					int index = findVarName (name);
+					if (index == -1)
+						throw new SyntaxException (WarningMessage.varNoDec (name));
+					Value val = allTable [index] [name];
+					if (val.getValue () == Constants.NULL)
+						throw new SyntaxException (WarningMessage.cannotNull ());
+					toWrite = val.getValue ();
+				} else if (desc.Contains ("Operator")) {
+					toWrite = operatorList (lexemeList, ref i);
+					if (!lexemeList [i].getDescription ().Contains ("constant") &&
+					   lexemeList [i].getDescription () != Constants.VARDESC)
+						i--;
+				} else
+					throw new SyntaxException (WarningMessage.notPrintable (name));
+				printString (toWrite, ref i);
+			}
+			Console.WriteLine ("Now at: " + lexemeList[i].getName());
+		}
 
-		if (lexemeList [i + 1].getName () != Constants.NONEWLINE) {
+		if (lexemeList [i].getName () != Constants.NONEWLINE) {
 			outputField.Buffer.Text += "\n";
-		} else
-			i++;
+			i--;
+		}
+		Console.WriteLine ("Ended at: " + lexemeList[i].getName());
 	}
 
 	private void printString(string print, ref int i){
@@ -958,7 +965,7 @@ public partial class MainWindow: Gtk.Window
 		String name = lexemeList [index].getName ();
 		String desc = lexemeList [index].getDescription ();
 
-		for (; !desc.Contains("break"); index++,
+		for (; !desc.Contains("break") && name != Constants.NONEWLINE; index++,
 		     name = lexemeList [index].getName (),
 		     desc = lexemeList [index].getDescription ()) {
 			if (name == Constants.A) {
@@ -976,7 +983,7 @@ public partial class MainWindow: Gtk.Window
 					stack.Push (new Value (name, type [0]));
 					ANned = false;
 				} else
-					throw new SyntaxException (WarningMessage.unexpectedLexeme (name));
+					break;
 			} else if (desc == Constants.VARDESC) {
 				int i = findVarName (name);
 				if (i != -1) {
@@ -1001,6 +1008,10 @@ public partial class MainWindow: Gtk.Window
 		List<Value> val = new List<Value> ();
 		Value op = null;
 		String result = "";
+
+		foreach (Value v in stack) {
+			Console.WriteLine (v.getValue ());
+		}
 
 		while(stack.Count > 1){
 			try{
