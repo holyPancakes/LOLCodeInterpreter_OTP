@@ -1,19 +1,9 @@
 ﻿<Properties StartupItem="test/test.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="test/Program.cs">
     <Files>
       <File FileName="test/Program.cs" Line="17" Column="1" />
-      <File FileName="test/MainWindow.cs" Line="1384" Column="54" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State expanded="True">
-          <Node name="test" expanded="True">
-            <Node name="MainWindow.cs" selected="True" />
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
