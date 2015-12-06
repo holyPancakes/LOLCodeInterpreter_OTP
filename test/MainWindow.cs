@@ -1319,9 +1319,9 @@ public partial class MainWindow: Gtk.Window
 				"Open",ResponseType.Accept);
 
 		filechooser.Filter = new FileFilter ();
-		filechooser.Filter.Name = "LOLCODE";
+		filechooser.Filter.Name = "LOLCode";
 		filechooser.Filter.AddPattern("*.lol");
-		filechooser.SetCurrentFolder ("./../../../");
+		filechooser.SetCurrentFolder ("./../../../../");
 		filechooser.SelectMultiple = false;
 
 		if (filechooser.Run() == (int)ResponseType.Accept) 
@@ -1341,8 +1341,6 @@ public partial class MainWindow: Gtk.Window
 			}
 			file.Close();
 		}
-
-
 		filechooser.Destroy();
 	}
 	
@@ -1355,6 +1353,92 @@ public partial class MainWindow: Gtk.Window
 	{
 		if (args.Event.Key == Gdk.Key.F5) {
 			Interpret ();
+		}
+	}
+	protected void aboutUs (object sender, EventArgs e)
+	{
+		AboutDialog about = new AboutDialog ();
+		about.ProgramName = "ANG GANDA NI MAAM KAT LOLTERPRETER KEK";
+		about.Version = "1.0";
+		about.Copyright = "(c) OutlawTechnoPsychobitches : Vega, Vibar, Baul";
+		about.Comments = @"LOLCode Interpreter for creating, editing, and executing LOLCode v1.2 programs";
+		try{
+			about.Logo = new Gdk.Pixbuf("../../logo.png");
+		}
+		catch(Exception exception){}
+		about.Run();
+		about.Destroy();
+	}
+
+	protected void saveAs (object sender, EventArgs e)
+	{
+		Gtk.FileChooserDialog fileChooser = new Gtk.FileChooserDialog (
+			"Save LOLCode",
+			this,
+			FileChooserAction.Save,
+			"Cancel", ResponseType.Cancel,
+			"Save", ResponseType.Accept);
+
+		fileChooser.SetCurrentFolder ("./../../../../");
+		fileChooser.SelectMultiple = false;
+		fileChooser.Filter = new FileFilter ();
+		fileChooser.Filter.Name = "LOLCode";
+		fileChooser.Filter.AddPattern ("*.lol");
+
+
+		if (fileChooser.Run () == (int)ResponseType.Accept) {
+			{
+				try{
+					File.Delete (fileChooser.Filename);
+				}catch(Exception ex){}
+				System.IO.FileStream filestream;
+				if (fileChooser.Filename.EndsWith (".lol")) { 
+					filestream = System.IO.File.OpenWrite (fileChooser.Filename);
+					this.pageLabel.Text = fileChooser.Filename;
+				} 
+				else { 
+					filestream = System.IO.File.OpenWrite (fileChooser.Filename + ".lol");
+					this.pageLabel.Text = fileChooser.Filename+".lol";
+				}
+				try{
+					using(StreamWriter writer = new StreamWriter(filestream)){
+
+						String text = sourceText.Buffer.Text;
+						writer.WriteLine(text);
+						writer.Close();
+					}
+				}catch(Exception ex){
+					this.outputField.Buffer.Text += "\nThe file could not be saved: "+ ex.Message;
+				}
+				filestream.Close();
+			}
+		}
+		fileChooser.Destroy ();
+	}
+
+	protected void save (object sender, EventArgs e)
+	{
+		String filename = this.pageLabel.Text;
+		if (!filename.StartsWith("/")) {
+			this.saveAs (sender, e);
+		}
+		else {
+			try {
+				File.Delete (filename);
+			} catch (Exception ex) {
+			}
+			System.IO.FileStream filestream = System.IO.File.OpenWrite (filename);
+			try {
+				using (StreamWriter writer = new StreamWriter(filestream)) {
+
+					String text = sourceText.Buffer.Text;
+					writer.WriteLine (text);
+					writer.Close ();
+				}
+			} catch (Exception ex) {
+				this.outputField.Buffer.Text += "\nThe file could not be saved: " + ex.Message;
+			}
+			filestream.Close ();
 		}
 	}
 }

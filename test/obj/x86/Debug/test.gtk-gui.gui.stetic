@@ -85,11 +85,13 @@
         <property name="Type">Action</property>
         <property name="Label" translatable="yes">Save</property>
         <property name="ShortLabel" translatable="yes">Save as...</property>
+        <signal name="Activated" handler="save" />
       </action>
       <action id="SaveAsAction">
         <property name="Type">Action</property>
         <property name="Label" translatable="yes">Save as...</property>
         <property name="ShortLabel" translatable="yes">Exit</property>
+        <signal name="Activated" handler="saveAs" />
       </action>
       <action id="ExitAction">
         <property name="Type">Action</property>
@@ -106,6 +108,7 @@
         <property name="Type">Action</property>
         <property name="Label" translatable="yes">About</property>
         <property name="ShortLabel" translatable="yes">About</property>
+        <signal name="Activated" handler="aboutUs" />
       </action>
       <action id="RunAction">
         <property name="Type">Action</property>
@@ -127,7 +130,7 @@
     <property name="MemberName" />
     <property name="WidthRequest">800</property>
     <property name="HeightRequest">600</property>
-    <property name="Title" translatable="yes">ANG GANDA NI MAAM KAT LOLCODE INTERPRETER</property>
+    <property name="Title" translatable="yes">ANG GANDA NI MAAM KAT LOLTERPRETER KEK</property>
     <property name="WindowPosition">CenterAlways</property>
     <property name="Resizable">False</property>
     <property name="AllowGrow">False</property>
@@ -145,8 +148,6 @@
                 <node type="Menuitem" action="SaveAsAction" />
                 <node type="Menuitem" action="ExitAction" />
               </node>
-              <node type="Menu" action="ViewAction1" />
-              <node type="Menu" action="EditAction1" />
               <node type="Menu" action="RunAction">
                 <node type="Menuitem" action="RunProgramF5Action" />
               </node>
