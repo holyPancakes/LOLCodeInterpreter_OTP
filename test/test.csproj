@@ -80,6 +80,5 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <None Include="WhatItCanDo.txt" />
-    <None Include="contributors.txt" />
   </ItemGroup>
 </Project>

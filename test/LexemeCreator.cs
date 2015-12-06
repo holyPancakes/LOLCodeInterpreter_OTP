@@ -423,7 +423,7 @@ namespace test
 				if (token.Equals (Constants.ADD))
 					temp = new Lexeme (Constants.ADD, "Operator that adds two numbers");
 				else if (token.Equals (Constants.MIN))
-					temp = new Lexeme (Constants.MIN, "Gets the smaller number");
+					temp = new Lexeme (Constants.MIN, "Operator that gets the smaller number");
 				else if(!token.EndsWith("OF") && token.Contains(" ")){
 					string[] str = token.Split(delimiter);
 					temp = new Lexeme(str[0], Constants.VARDESC);

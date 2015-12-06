@@ -255,21 +255,21 @@ public partial class MainWindow: Gtk.Window
 	}
 
 	private void typeParse(ref int i){
-		string name = lexemeList [i].getName (); //holds MAEK or the first operator of IS NOW A
-		int ival; //int value result holder
-		double numbarval; //float value result holder
+		string name = lexemeList [i].getName ();
+		int ival;
+		double numbarval;
 		float fval;
-		string stval; //string value result holder
-		string troof; //boolean value result holder
-		string val; //value to be converted
-		string type; //new data type
-		string a; // A
+		string stval;
+		string troof;
+		string val;
+		string type;
+		string a;
 		int index;
 		string desc;
 		string result;
 		string checker;
 		int k;
-		//FUCCBOI
+
 		if (name.Equals (Constants.EXPCAST)) {
 			i++;
 			desc = lexemeList [i].getDescription ();
@@ -393,6 +393,7 @@ public partial class MainWindow: Gtk.Window
 			}
 		}
 	}
+
 	private void ifParse(ref int i){
 		int elseindex = 0;
 		int ifIndex = 0;
@@ -569,10 +570,10 @@ public partial class MainWindow: Gtk.Window
 			desc == Constants.VARDESC || name == "\"") {
 			if (name == "\"") {
 				Lexeme yarn = lexemeList [i + 2];
-				toWrite = yarn.getName () + "\n";
+				toWrite = yarn.getName ();
 				i += 3;
 			} else if (desc.Contains("constant")) {
-				toWrite = name + "\n";
+				toWrite = name;
 				i++;
 			} else if (desc == Constants.VARDESC) {
 				int index = findVarName (name);
@@ -581,16 +582,48 @@ public partial class MainWindow: Gtk.Window
 				Value val = allTable[index][name];
 				if (val.getValue () == Constants.NULL)
 					throw new SyntaxException (WarningMessage.cannotNull());
-				toWrite = val.getValue () + "\n";
+				toWrite = val.getValue ();
 				i++;
 			} else if (desc.Contains ("Operator")) {
 				i++;
 				toWrite = operatorList (lexemeList, ref i);
 			} else
 				throw new SyntaxException (WarningMessage.notPrintable (name));
+			toWrite = putEscChar (toWrite);
 			outputField.Buffer.Text += toWrite;
 		} else
 			throw new SyntaxException (WarningMessage.noArguments (Constants.PRINT));
+	}
+
+	private string putEscChar(string print){
+		Dictionary<String, String> escapeChar = new Dictionary<string, string> () {
+			{ ":)", "\n" },
+			{ ":>", "\t" },
+			{ ":O", "" },
+			{ ":\"", "\"" },
+			{ "::", ":" }
+		};
+
+		while (print.IndexOf (":") != -1) {
+			string substr = "";
+			for (int i = print.IndexOf (":")-1; i < print.Length; i++) {
+				if (print.ToCharArray () [i] == ' ')
+					break;
+				substr += print.ToCharArray () [i];
+			}
+
+			Console.WriteLine ("Substring: " + substr);
+
+			if(escapeChar.ContainsKey(substr)){
+				Console.WriteLine ("contains!");
+				print = print.Replace(substr, escapeChar[substr]);
+			}
+
+			Console.WriteLine (print);
+			break;
+		}
+
+		return print;
 	}
 
 	private void scanParse(ref int i){
@@ -662,6 +695,7 @@ public partial class MainWindow: Gtk.Window
 						i += 5;
 					} else if ( index != -1) {
 						table.Add (name, allTable[index][l3.getName ()]);
+						i += 3;
 					} else if (l3.getDescription ().Contains ("Operator")) {
 						i += 3;
 						string val = operatorList (lexemeList, ref i);
@@ -733,10 +767,10 @@ public partial class MainWindow: Gtk.Window
 		if (name.Equals (Constants.CONCAT)) {
 			index++;
 			result = concatString (lexemeList, ref index);
-		} else if (dec.Contains("Operator") && !dec.Contains("Arity")){
-			result = mathOperation (lexemeList, ref index);
 		} else if(dec.Contains("Arity")) {
 			result = arityOperation(lexemeList, ref index);
+		} else if (dec.Contains("Operator")){
+			result = mathOperation (lexemeList, ref index);
 		} else
 			throw new WarningException(WarningMessage.unexpectedLexeme(name));
 
@@ -748,6 +782,7 @@ public partial class MainWindow: Gtk.Window
 		bool ANned = true;
 		char[] delimiter = {' '}; 
 		string result = "";
+
 		for (; !lexemeList [index].getDescription ().Contains ("break"); index++) {
 			String name = lexemeList [index].getName ();
 			String desc = lexemeList [index].getDescription ();
@@ -807,15 +842,26 @@ public partial class MainWindow: Gtk.Window
 				stackArity.Pop ();
 				values.Add(new Value((popped.getValue() == Constants.TRUE)? Constants.FALSE: Constants.TRUE, Constants.FALSE));
 			} else if (popped.getType () != Constants.BOOL) {
-				temp.Push (popped);
-				while ((popped = stackArity.Pop ()).getType () != "Operator") {
+				if (popped.getType () != "Operator") {
+					temp.Push (popped);
+					while ((popped = stackArity.Pop ()).getType () != "Operator") {
+						temp.Push (popped);
+					}
+					temp.Push (popped);
+				} else {
+					temp.Push (values[values.Count - 1]);
+					values.RemoveAt (values.Count - 1);
+
+					temp.Push (values[values.Count - 1]);
+					values.RemoveAt (values.Count - 1);
+
 					temp.Push (popped);
 				}
-				temp.Push (popped);
 
 				while (temp.Count > 0) {
 					stack.Push (temp.Pop ());
 				}
+
 				result = evaluateCond ();
 				if (stackArity.Peek ().getValue () == Constants.NOT){
 					stackArity.Pop ();
@@ -906,6 +952,7 @@ public partial class MainWindow: Gtk.Window
 
 		while(stack.Count > 1){
 			try{
+				
 				val.Add(stack.Pop());
 				if(stack.Count > 1){
 					if(stack.Peek().getValue() == Constants.NOT){
