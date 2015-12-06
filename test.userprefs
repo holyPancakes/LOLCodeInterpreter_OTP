@@ -3,7 +3,10 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="test/MainWindow.cs">
     <Files>
       <File FileName="test/Program.cs" Line="1" Column="1" />
-      <File FileName="test/MainWindow.cs" Line="1" Column="1" />
+      <File FileName="test/LexemeCreator.cs" Line="126" Column="40" />
+      <File FileName="test/MainWindow.cs" Line="593" Column="45" />
+      <File FileName="test/Constants.cs" Line="92" Column="39" />
+      <File FileName="test/WarningMessage.cs" Line="105" Column="42" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

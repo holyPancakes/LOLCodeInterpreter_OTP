@@ -508,7 +508,11 @@ public partial class MainWindow: Gtk.Window
 			throw new SyntaxException(WarningMessage.unexpectedLexeme(lexemeList[index+1].getName()));
 
 		start = afterLoop;
-		while ((tilWIN && result == "FAIL") || (!tilWIN && result == "WIN")) {
+
+		Console.WriteLine ("TILWIN is: " + tilWIN);
+		Console.WriteLine ("Condition 1: " + (!tilWIN && result == "FAIL"));
+		Console.WriteLine ("Condition 2: " + (tilWIN && result == "WIN"));
+		while ((!tilWIN && result == "FAIL") || (!tilWIN && result == "WIN")) {
 			parse (ref start, Constants.STARTLOOP);
 
 			Value val = allTable [tableIndex] [varname];
@@ -660,6 +664,8 @@ public partial class MainWindow: Gtk.Window
 
 		if (lol2C.ContainsKey (esc)) {
 			outputField.Buffer.Text += lol2C [esc];
+			if (esc == ":O")
+				SystemSounds.Beep.Play ();
 			return true;
 		} else if (hex.IsMatch (esc)) {
 			hexCode = esc.Replace (":(", "");
